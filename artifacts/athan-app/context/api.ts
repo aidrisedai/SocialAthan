@@ -136,6 +136,10 @@ export const api = {
       apiFetch<{ user: ApiUser }>(`/users/by-username/${username}`),
   },
   masjids: {
+    nearby: (lat: number, lng: number, radiusMeters = 10000) =>
+      apiFetch<{ masjids: unknown[] }>(
+        `/masjids/nearby?lat=${lat}&lng=${lng}&radius=${radiusMeters}`
+      ),
     fetchTimes: (params: {
       url?: string;
       lat?: number;

@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { Masjid, useApp } from "@/context/AppContext";
-import { searchNearbyMasjids } from "@/utils/searchMasjids";
+import { api } from "@/context/api";
 
 export default function MasjidSelectScreen() {
   const colors = useColors();
@@ -54,7 +54,8 @@ export default function MasjidSelectScreen() {
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-      const results = await searchNearbyMasjids(loc.coords.latitude, loc.coords.longitude);
+      const { masjids } = await api.masjids.nearby(loc.coords.latitude, loc.coords.longitude);
+      const results = masjids as Masjid[];
       setLocalList(results);
       if (results.length === 0) {
         setFetchError("No masjids found within 10 km. Try a wider area.");

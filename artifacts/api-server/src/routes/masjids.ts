@@ -242,6 +242,141 @@ async function fetchAladhanTimes(
   }
 }
 
+// ── Nearby masjids proxy (Overpass server-side) ─────────────────────────────
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
+  "https://z.overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+
+interface OverpassElement {
+  id: number;
+  type: string;
+  lat?: number;
+  lon?: number;
+  center?: { lat: number; lon: number };
+  tags?: Record<string, string | undefined>;
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function queryOverpass(query: string): Promise<OverpassElement[]> {
+  let lastErr: Error | null = null;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `data=${encodeURIComponent(query)}`,
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (!resp.ok) {
+        lastErr = new Error(`Overpass ${new URL(endpoint).hostname} returned ${resp.status}`);
+        continue;
+      }
+      const json = (await resp.json()) as { elements?: OverpassElement[] };
+      return json.elements ?? [];
+    } catch (err) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+      continue;
+    }
+  }
+  throw lastErr ?? new Error("All Overpass endpoints failed");
+}
+
+router.get("/masjids/nearby", async (req, res) => {
+  const lat = parseFloat(req.query.lat as string);
+  const lng = parseFloat(req.query.lng as string);
+  const radius = parseInt((req.query.radius as string) ?? "10000", 10);
+
+  if (isNaN(lat) || isNaN(lng)) {
+    res.status(400).json({ error: "lat and lng are required" });
+    return;
+  }
+
+  const clampedRadius = Math.min(Math.max(radius, 1000), 50000);
+
+  const query = [
+    `[out:json][timeout:25];`,
+    `(`,
+    `  node["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
+    `  way["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
+    `  relation["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
+    `);`,
+    `out center tags 50;`,
+  ].join("\n");
+
+  try {
+    const elements = await queryOverpass(query);
+    const seen = new Set<string>();
+    const results: object[] = [];
+
+    for (const el of elements) {
+      const elLat = el.lat ?? el.center?.lat ?? 0;
+      const elLng = el.lon ?? el.center?.lon ?? 0;
+      if (!elLat && !elLng) continue;
+
+      const rawName =
+        el.tags?.["name:en"] ??
+        el.tags?.["name"] ??
+        el.tags?.["official_name"] ??
+        "Islamic Center";
+
+      const key = rawName.toLowerCase().trim();
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const addrParts = [
+        el.tags?.["addr:housenumber"],
+        el.tags?.["addr:street"],
+        el.tags?.["addr:city"],
+        el.tags?.["addr:state"],
+      ].filter(Boolean);
+
+      const address = addrParts.length > 0 ? addrParts.join(", ") : "Address not listed";
+      const distMi = parseFloat((haversineKm(lat, lng, elLat, elLng) * 0.621371).toFixed(1));
+
+      const website =
+        el.tags?.["website"] ??
+        el.tags?.["contact:website"] ??
+        el.tags?.["url"] ??
+        undefined;
+
+      results.push({
+        id: `osm_${el.type}_${el.id}`,
+        name: rawName,
+        address,
+        distance: distMi,
+        lat: elLat,
+        lng: elLng,
+        claimed: false,
+        memberCount: 0,
+        website,
+      });
+    }
+
+    results.sort((a: any, b: any) => (a.distance ?? 999) - (b.distance ?? 999));
+    res.json({ masjids: results });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    res.status(502).json({ error: `Overpass query failed: ${msg}` });
+  }
+});
+
 router.post("/masjids/fetch-times", async (req, res) => {
   const { url, lat, lng, method } = req.body as {
     url?: string;

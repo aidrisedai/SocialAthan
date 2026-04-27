@@ -15,7 +15,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalcMethod, computePrayerTimes, formatIqamah } from "@/utils/prayerTimes";
 import { scheduleAllPrayerNotifications, scheduleStreakReminderNotification, setupNotificationChannel } from "@/utils/notifications";
 import { api, setApiBaseUrl, getAuthToken, saveAuthCredentials } from "./api";
-import { searchNearbyMasjids } from "@/utils/searchMasjids";
 
 export type Prayer = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha" | "jummah";
 
@@ -543,14 +542,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     lastFetchedCoordsRef.current = coords;
 
-    searchNearbyMasjids(coords.lat, coords.lng)
-      .then((results) => {
-        if (results.length === 0) return;
-        setMasjidList(results);
-        AsyncStorage.setItem("masjidList", JSON.stringify(results)).catch(() => {});
+    api.masjids
+      .nearby(coords.lat, coords.lng)
+      .then(({ masjids }) => {
+        if (!masjids || masjids.length === 0) return;
+        setMasjidList(masjids as Masjid[]);
+        AsyncStorage.setItem("masjidList", JSON.stringify(masjids)).catch(() => {});
       })
       .catch((e) => {
-        if (__DEV__) console.warn("[AppContext] Overpass masjid fetch failed:", e);
+        if (__DEV__) console.warn("[AppContext] Nearby masjid fetch failed:", e);
       });
   }, [coords]);
 
