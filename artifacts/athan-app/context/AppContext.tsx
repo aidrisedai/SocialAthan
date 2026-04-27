@@ -265,6 +265,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [pendingRSVP, setPendingRSVPState] = useState<Prayer | null>(null);
   const [calcMethod, setCalcMethodState] = useState<CalcMethod>("isna");
   const [coords, setCoords] = useState<{ lat: number; lng: number }>(DEFAULT_COORDS);
+  const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
   const [friends, setFriends] = useState<Friend[]>(SAMPLE_FRIENDS);
   const [streaks, setStreaks] = useState<StreakEntry[]>(getDefaultStreaks());
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
@@ -363,7 +364,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       : null;
     const computed = buildPrayerTimes(coords, calcMethod, masjid ?? null, prayerRsvps);
     setPrayerTimes(computed);
-  }, [coords, calcMethod, primaryMasjid, masjidList, prayerRsvps, isLoading]);
+  }, [coords, calcMethod, primaryMasjid, masjidList, prayerRsvps, isLoading, currentDate]);
 
   useEffect(() => {
     if (Platform.OS === "web" || prayerTimes.length === 0) return;
@@ -385,6 +386,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const tick = () => {
       const now = new Date();
+      const todayStr = now.toDateString();
+      setCurrentDate((prev) => {
+        if (prev !== todayStr) return todayStr;
+        return prev;
+      });
       setPrayerTimes((prev) =>
         prev.map((p) => {
           const adhanTime = new Date(p.adhanDate);
