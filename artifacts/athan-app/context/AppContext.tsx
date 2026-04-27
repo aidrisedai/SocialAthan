@@ -9,7 +9,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
+import { router } from "expo-router";
 import { CalcMethod, computePrayerTimes, formatIqamah } from "@/utils/prayerTimes";
 import { scheduleAllPrayerNotifications, setupNotificationChannel } from "@/utils/notifications";
 
@@ -329,7 +330,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                   Math.sin(dLng / 2) ** 2;
               const dist = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
               if (dist > 5) {
-                const Alert = require("react-native").Alert;
                 Alert.alert(
                   "You've Moved",
                   "Looks like you're in a new area. Would you like to find a masjid nearby?",
@@ -337,10 +337,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
                     { text: "Not Now", style: "cancel" },
                     {
                       text: "Find Masjid",
-                      onPress: () => {
-                        const router = require("expo-router").router;
-                        router.push("/masjid-select");
-                      },
+                      onPress: () => router.push("/masjid-select"),
                     },
                   ]
                 );
