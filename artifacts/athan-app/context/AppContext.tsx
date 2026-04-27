@@ -111,6 +111,9 @@ interface AppContextValue {
   updateUser: (updates: Partial<AppUser>) => void;
   friendRSVPs: Record<string, Partial<Record<Prayer, Friend[]>>>;
   updateMasjidTimes: (masjidId: string, overrides: Partial<Record<Prayer, MasjidTimeOverride>>) => void;
+  pendingRSVP: Prayer | null;
+  clearPendingRSVP: () => void;
+  setPendingRSVP: (prayer: Prayer) => void;
 }
 
 const DEFAULT_COORDS = { lat: 40.7128, lng: -74.006 };
@@ -223,6 +226,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [masjidList, setMasjidList] = useState<Masjid[]>(NEARBY_MASJIDS);
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [prayerRsvps, setPrayerRsvps] = useState<Partial<Record<Prayer, RSVPStatus>>>({});
+  const [pendingRSVP, setPendingRSVPState] = useState<Prayer | null>(null);
   const [calcMethod, setCalcMethodState] = useState<CalcMethod>("isna");
   const [coords, setCoords] = useState<{ lat: number; lng: number }>(DEFAULT_COORDS);
   const [friends, setFriends] = useState<Friend[]>(SAMPLE_FRIENDS);
@@ -291,6 +295,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setupNotificationChannel().catch(() => {});
     scheduleAllPrayerNotifications(prayerTimes, notificationSettings).catch(() => {});
   }, [prayerTimes, notificationSettings]);
+
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      setPrayerTimes((prev) =>
+        prev.map((p) => {
+          const adhanTime = new Date(p.adhanDate);
+          const completed =
+            !isNaN(adhanTime.getTime()) &&
+            adhanTime < new Date(now.getTime() - 15 * 60_000);
+          return p.completed !== completed ? { ...p, completed } : p;
+        })
+      );
+    };
+    tick();
+    const interval = setInterval(tick, 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   const setOnboardingComplete = useCallback((v: boolean) => {
     setOnboardingCompleteState(v);
@@ -390,6 +412,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const setPendingRSVP = useCallback((prayer: Prayer) => {
+    setPendingRSVPState(prayer);
+  }, []);
+
+  const clearPendingRSVP = useCallback(() => {
+    setPendingRSVPState(null);
+  }, []);
+
   const updateMasjidTimes = useCallback(
     (masjidId: string, overrides: Partial<Record<Prayer, MasjidTimeOverride>>) => {
       setMasjidList((prev) => {
@@ -445,6 +475,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateUser,
       friendRSVPs,
       updateMasjidTimes,
+      pendingRSVP,
+      setPendingRSVP,
+      clearPendingRSVP,
     }),
     [
       user,
@@ -469,6 +502,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateUser,
       friendRSVPs,
       updateMasjidTimes,
+      pendingRSVP,
+      setPendingRSVP,
+      clearPendingRSVP,
     ]
   );
 

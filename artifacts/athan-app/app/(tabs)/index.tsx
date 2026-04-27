@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Platform,
   Pressable,
@@ -48,8 +48,15 @@ const COMMUNITY_COUNTS: Record<string, number> = {
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { prayerTimes, primaryMasjid, friendRSVPs, updateRSVP } = useApp();
+  const { prayerTimes, primaryMasjid, friendRSVPs, updateRSVP, pendingRSVP, clearPendingRSVP } = useApp();
   const [rsvpTarget, setRsvpTarget] = useState<Prayer | null>(null);
+
+  useEffect(() => {
+    if (pendingRSVP) {
+      setRsvpTarget(pendingRSVP);
+      clearPendingRSVP();
+    }
+  }, [pendingRSVP, clearPendingRSVP]);
 
   const nextPrayer = useMemo(() => getNextPrayer(prayerTimes), [prayerTimes]);
   const masjidId = primaryMasjid?.id ?? "m1";

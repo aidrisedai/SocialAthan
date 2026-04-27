@@ -5,6 +5,7 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import * as Notifications from "expo-notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -14,11 +15,42 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AppProvider, useApp } from "@/context/AppContext";
+import { AppProvider, useApp, Prayer } from "@/context/AppContext";
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+function NotificationHandler() {
+  const { setPendingRSVP } = useApp();
+
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as {
+        prayer?: string;
+        type?: string;
+      };
+      const prayer = data?.prayer as Prayer | undefined;
+      const type = data?.type;
+      const actionId = response.actionIdentifier;
+
+      if (prayer) {
+        if (
+          type === "rsvp_prompt" ||
+          type === "iqamah" ||
+          actionId === "going" ||
+          actionId === Notifications.DEFAULT_ACTION_IDENTIFIER
+        ) {
+          setPendingRSVP(prayer);
+          router.navigate("/(tabs)");
+        }
+      }
+    });
+    return () => sub.remove();
+  }, [setPendingRSVP]);
+
+  return null;
+}
 
 function RootLayoutNav() {
   const { onboardingComplete } = useApp();
@@ -75,6 +107,7 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
               <AppProvider>
+                <NotificationHandler />
                 <RootLayoutNav />
               </AppProvider>
             </KeyboardProvider>

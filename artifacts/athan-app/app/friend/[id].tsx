@@ -22,7 +22,6 @@ export default function FriendProfileScreen() {
   const { friends, removeFriend, friendRSVPs, primaryMasjid, prayerTimes } = useApp();
 
   const friend = friends.find((f) => f.id === id);
-  if (!friend) return null;
 
   const masjidId = primaryMasjid?.id ?? "m1";
   const rsvps = friendRSVPs[masjidId] ?? {};
@@ -31,34 +30,40 @@ export default function FriendProfileScreen() {
     (rsvps[p] ?? []).some((f) => f.id === id)
   );
 
-  const mockStreak = { count: Math.floor(Math.random() * 20) + 1, prayer: "Fajr" };
+  const mockStreak = { count: 12, prayer: "Fajr" };
+
+  const friendName = friend?.name ?? "";
+  const friendId = id ?? "";
+  const friendUsername = friend?.username ?? "";
 
   function handleMessage() {
-    router.push({ pathname: "/chat/[id]", params: { id: friend.id } });
+    router.push({ pathname: "/chat/[id]", params: { id: friendId } });
   }
 
   function handleNudge() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert("Nudge sent", `A gentle reminder was sent to ${friend.name}.`);
+    Alert.alert("Nudge sent", `A gentle reminder was sent to ${friendName}.`);
   }
 
   function handleUnfriend() {
     Alert.alert(
       "Remove Friend",
-      `Are you sure you want to remove ${friend.name}?`,
+      `Are you sure you want to remove ${friendName}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Remove",
           style: "destructive",
           onPress: () => {
-            removeFriend(friend.id);
+            removeFriend(friendId);
             router.back();
           },
         },
       ]
     );
   }
+
+  if (!friend) return null;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -76,12 +81,12 @@ export default function FriendProfileScreen() {
         <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={[styles.avatar, { backgroundColor: colors.highlight }]}>
             <Text style={[styles.avatarText, { color: colors.primary }]}>
-              {friend.name.charAt(0)}
+              {friendName.charAt(0)}
             </Text>
           </View>
-          <Text style={[styles.name, { color: colors.foreground }]}>{friend.name}</Text>
+          <Text style={[styles.name, { color: colors.foreground }]}>{friendName}</Text>
           <Text style={[styles.username, { color: colors.mutedForeground }]}>
-            @{friend.username}
+            @{friendUsername}
           </Text>
           <View style={styles.actionRow}>
             <Pressable
