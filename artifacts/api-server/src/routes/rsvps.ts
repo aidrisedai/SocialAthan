@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { athanRsvps, athanFriendships, athanUsers } from "@workspace/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { requireAuth, type AuthRequest } from "../middlewares/auth";
 import { pushToUsers } from "../lib/wsManager";
 import crypto from "crypto";
@@ -104,6 +104,36 @@ router.delete("/rsvps/:prayer", requireAuth, async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: "Failed to clear RSVP" });
+  }
+});
+
+router.get("/rsvps/community-count", async (req, res) => {
+  const date = (req.query.date as string) || today();
+  const masjidId = req.query.masjidId as string | undefined;
+  if (!masjidId) {
+    res.status(400).json({ error: "masjidId is required" });
+    return;
+  }
+  try {
+    const rows = await db
+      .select({
+        prayer: athanRsvps.prayer,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(athanRsvps)
+      .where(
+        and(
+          eq(athanRsvps.rsvpDate, date),
+          eq(athanRsvps.status, "going"),
+          eq(athanRsvps.masjidId, masjidId)
+        )
+      )
+      .groupBy(athanRsvps.prayer);
+    const counts: Record<string, number> = {};
+    for (const r of rows) counts[r.prayer] = r.count;
+    res.json({ counts, date, masjidId });
+  } catch {
+    res.status(500).json({ error: "Failed to fetch community counts" });
   }
 });
 

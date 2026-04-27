@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { Masjid, useApp } from "@/context/AppContext";
-import { searchNearbyMasjids } from "@/utils/searchMasjids";
+import { api } from "@/context/api";
 
 export default function MasjidSelectionScreen() {
   const colors = useColors();
@@ -22,29 +22,42 @@ export default function MasjidSelectionScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [localList, setLocalList] = useState<Masjid[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const hasFetched = useRef(false);
 
   const displayList = localList ?? nearbyMasjids;
 
+  const runSearch = React.useCallback(async () => {
+    setSearchError(null);
+    setSearching(true);
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setSearchError("Location permission needed to find nearby masjids.");
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      const res = await api.masjids.nearby(loc.coords.latitude, loc.coords.longitude);
+      const results = (res.masjids ?? []) as Masjid[];
+      if (results.length > 0) setLocalList(results);
+      else setSearchError("No masjids found within 10 km. You can pick one later in settings.");
+    } catch {
+      setSearchError("Search took too long. Please try again or skip for now.");
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (hasFetched.current || displayList.length > 0) return;
     hasFetched.current = true;
-    setSearching(true);
-    Location.getForegroundPermissionsAsync()
-      .then(({ status }) => {
-        if (status !== "granted") { setSearching(false); return; }
-        return Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-      })
-      .then((loc) => {
-        if (!loc) { setSearching(false); return; }
-        return searchNearbyMasjids(loc.coords.latitude, loc.coords.longitude);
-      })
-      .then((results) => {
-        if (results && results.length > 0) setLocalList(results);
-        setSearching(false);
-      })
-      .catch(() => setSearching(false));
-  }, []);
+    runSearch();
+  }, [displayList.length, runSearch]);
+
+  function handleSkip() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/(onboarding)/profile");
+  }
 
   function handleSelect(masjid: Masjid) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -88,9 +101,17 @@ export default function MasjidSelectionScreen() {
           </View>
         )}
         {!searching && displayList.length === 0 && (
-          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            No masjids found. Make sure location permission was granted.
-          </Text>
+          <View style={styles.emptyBlock}>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+              {searchError ?? "No masjids found. Make sure location permission was granted."}
+            </Text>
+            <Pressable
+              onPress={runSearch}
+              style={[styles.retryBtn, { borderColor: colors.border }]}
+            >
+              <Text style={[styles.retryText, { color: colors.foreground }]}>Try again</Text>
+            </Pressable>
+          </View>
         )}
         {displayList.map((masjid) => {
           const isSelected = selected === masjid.id;
@@ -119,9 +140,11 @@ export default function MasjidSelectionScreen() {
                       {masjid.distance} mi
                     </Text>
                   )}
-                  <Text style={[styles.members, { color: colors.mutedForeground }]}>
-                    {masjid.memberCount} members
-                  </Text>
+                  {masjid.memberCount > 0 && (
+                    <Text style={[styles.members, { color: colors.mutedForeground }]}>
+                      {masjid.memberCount} members
+                    </Text>
+                  )}
                 </View>
               </View>
               {isSelected && (
@@ -151,6 +174,11 @@ export default function MasjidSelectionScreen() {
             ]}
           >
             Continue
+          </Text>
+        </Pressable>
+        <Pressable onPress={handleSkip} style={styles.skipBtn}>
+          <Text style={[styles.skipText, { color: colors.mutedForeground }]}>
+            I'll choose later
           </Text>
         </Pressable>
       </View>
@@ -235,15 +263,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Lora_400Regular",
   },
+  emptyBlock: {
+    alignItems: "center",
+    padding: 32,
+    gap: 14,
+  },
   emptyText: {
     fontSize: 14,
     fontFamily: "Lora_400Regular",
     textAlign: "center",
-    padding: 32,
+  },
+  retryBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  retryText: {
+    fontSize: 14,
+    fontFamily: "Lora_500Medium",
   },
   footer: {
     padding: 20,
     paddingBottom: 12,
+    gap: 8,
   },
   ctaBtn: {
     paddingVertical: 16,
@@ -254,5 +297,14 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
     fontFamily: "Lora_600SemiBold",
+  },
+  skipBtn: {
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  skipText: {
+    fontSize: 14,
+    fontFamily: "Lora_400Regular",
+    textDecorationLine: "underline",
   },
 });

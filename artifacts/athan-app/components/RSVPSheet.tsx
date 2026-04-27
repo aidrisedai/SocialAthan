@@ -13,7 +13,7 @@ interface Props {
   prayer: Prayer;
   prayerLabel: string;
   adhanTime: string;
-  iqamahTime: string;
+  iqamahTime?: string;
   onClose: () => void;
 }
 
@@ -71,7 +71,7 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
       <View style={styles.header}>
         <Text style={[styles.prayerName, { color: colors.foreground }]}>{prayerLabel}</Text>
         <Text style={[styles.times, { color: colors.mutedForeground }]}>
-          Adhan {adhanTime} · Iqamah {iqamahTime}
+          {iqamahTime ? `Adhan ${adhanTime} · Iqamah ${iqamahTime}` : `Adhan ${adhanTime}`}
         </Text>
       </View>
 

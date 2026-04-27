@@ -60,7 +60,7 @@ export default function AdminPortalScreen() {
       jummah: { adhan: "", iqamah: "" },
     };
     for (const pt of targetPrayerTimes) {
-      fallback[pt.prayer] = { adhan: pt.adhan, iqamah: pt.iqamah };
+      fallback[pt.prayer] = { adhan: pt.adhan, iqamah: pt.iqamah ?? "" };
     }
     const overrides = targetMasjid?.timeOverrides ?? {};
     for (const [k, v] of Object.entries(overrides)) {

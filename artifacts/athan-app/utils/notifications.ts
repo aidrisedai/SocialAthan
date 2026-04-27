@@ -178,7 +178,7 @@ export async function scheduleAllPrayerNotifications(
       }
     }
 
-    if (settings.iqamah && perPrayer.iqamah) {
+    if (settings.iqamah && perPrayer.iqamah && prayer.iqamah) {
       const iqamahDate = parseTimeToDate(prayer.iqamah);
       if (iqamahDate) {
         const reminderDate = addMinutes(iqamahDate, -10);

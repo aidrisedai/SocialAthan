@@ -121,6 +121,13 @@ export const api = {
         `/rsvps/friends${qs ? `?${qs}` : ""}`
       );
     },
+    communityCounts: (masjidId: string, date?: string) => {
+      const params = new URLSearchParams({ masjidId });
+      if (date) params.set("date", date);
+      return apiFetch<{ counts: Record<string, number>; date: string; masjidId: string }>(
+        `/rsvps/community-count?${params.toString()}`
+      );
+    },
   },
   messages: {
     get: (partnerId: string, limit = 100) =>

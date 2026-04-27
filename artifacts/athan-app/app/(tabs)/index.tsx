@@ -36,19 +36,10 @@ function formatDate() {
   return now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-const COMMUNITY_COUNTS: Record<string, number> = {
-  fajr: 23,
-  dhuhr: 41,
-  jummah: 187,
-  asr: 28,
-  maghrib: 67,
-  isha: 44,
-};
-
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { prayerTimes, primaryMasjid, friendRSVPs, updateRSVP, pendingRSVP, clearPendingRSVP } = useApp();
+  const { prayerTimes, primaryMasjid, friendRSVPs, communityCounts, updateRSVP, pendingRSVP, clearPendingRSVP } = useApp();
   const [rsvpTarget, setRsvpTarget] = useState<Prayer | null>(null);
 
   useEffect(() => {
@@ -111,7 +102,8 @@ export default function HomeScreen() {
             item={item}
             isNext={item.prayer === nextPrayer}
             friendsGoing={masjidFriendRSVPs[item.prayer] ?? []}
-            communityCount={COMMUNITY_COUNTS[item.prayer] ?? 0}
+            communityCount={communityCounts[item.prayer] ?? 0}
+            masjidWebsite={primaryMasjid?.website}
             onRSVP={(prayer) => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setRsvpTarget(prayer);

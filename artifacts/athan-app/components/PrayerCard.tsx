@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React, { useRef } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { Friend, Prayer, PrayerTime, RSVPStatus } from "@/context/AppContext";
@@ -13,6 +13,7 @@ interface Props {
   isNext: boolean;
   friendsGoing: Friend[];
   communityCount: number;
+  masjidWebsite?: string;
   onRSVP: (prayer: Prayer) => void;
 }
 
@@ -28,9 +29,16 @@ const RSVP_ICONS: Record<NonNullable<RSVPStatus>, IoniconName> = {
   cant: "close-circle",
 };
 
-export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP }: Props) {
+export function PrayerCard({ item, isNext, friendsGoing, communityCount, masjidWebsite, onRSVP }: Props) {
   const colors = useColors();
   const scale = useRef(new Animated.Value(1)).current;
+
+  function handleOpenWebsite() {
+    if (!masjidWebsite) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const url = /^https?:\/\//i.test(masjidWebsite) ? masjidWebsite : `https://${masjidWebsite}`;
+    Linking.openURL(url).catch(() => {});
+  }
 
   function handlePress() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -80,9 +88,18 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
             <Text style={[styles.adhanTime, { color: colors.foreground }]}>
               {item.adhan}
             </Text>
-            <Text style={[styles.iqamahTime, { color: colors.mutedForeground }]}>
-              Iqamah {item.iqamah}
-            </Text>
+            {item.iqamah ? (
+              <Text style={[styles.iqamahTime, { color: colors.mutedForeground }]}>
+                Iqamah {item.iqamah}
+              </Text>
+            ) : masjidWebsite ? (
+              <Pressable onPress={handleOpenWebsite} style={styles.websiteRow}>
+                <Ionicons name="open-outline" size={12} color={colors.mutedForeground} />
+                <Text style={[styles.websiteText, { color: colors.mutedForeground }]}>
+                  Iqamah on masjid website
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
 
           <View style={styles.rightSection}>
@@ -153,13 +170,16 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
               ))}
             </View>
             <Text style={[styles.socialText, { color: colors.mutedForeground }]}>
-              {friendsGoing.length > 0
-                ? `${friendsGoing[0].name.split(" ")[0]}${
-                    friendsGoing.length > 1
-                      ? ` +${friendsGoing.length - 1}`
-                      : ""
-                  }${communityCount > 0 ? ` · +${communityCount} others` : ""}`
-                : `${communityCount} going`}
+              {(() => {
+                const others = Math.max(0, communityCount - friendsGoing.length);
+                if (friendsGoing.length === 0) {
+                  return communityCount === 1 ? "1 going" : `${communityCount} going`;
+                }
+                const firstName = friendsGoing[0].name.split(" ")[0];
+                const moreFriends = friendsGoing.length > 1 ? ` +${friendsGoing.length - 1}` : "";
+                const moreOthers = others > 0 ? ` · +${others} other${others === 1 ? "" : "s"}` : "";
+                return `${firstName}${moreFriends}${moreOthers}`;
+              })()}
             </Text>
           </View>
         )}
@@ -212,6 +232,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 2,
     fontFamily: "Lora_400Regular",
+  },
+  websiteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  websiteText: {
+    fontSize: 12,
+    fontFamily: "Lora_500Medium",
+    textDecorationLine: "underline",
   },
   completedBadge: {
     width: 32,

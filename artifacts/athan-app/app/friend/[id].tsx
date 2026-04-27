@@ -132,7 +132,7 @@ export default function FriendProfileScreen() {
                   {pt?.label ?? p}
                 </Text>
                 <Text style={[styles.sharedTime, { color: colors.mutedForeground }]}>
-                  {pt?.adhan} · Iqamah {pt?.iqamah}
+                  {pt?.iqamah ? `${pt?.adhan} · Iqamah ${pt.iqamah}` : pt?.adhan}
                 </Text>
               </View>
             );

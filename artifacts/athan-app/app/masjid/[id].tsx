@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import {
+  Linking,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -58,12 +59,14 @@ export default function MasjidDetailScreen() {
           <Text style={[styles.masjidName, { color: colors.foreground }]}>{masjid.name}</Text>
           <Text style={[styles.address, { color: colors.mutedForeground }]}>{masjid.address}</Text>
           <View style={styles.metaRow}>
-            <View style={[styles.metaBadge, { backgroundColor: colors.secondary }]}>
-              <Ionicons name="people-outline" size={14} color={colors.mutedForeground} />
-              <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
-                {masjid.memberCount} members
-              </Text>
-            </View>
+            {masjid.memberCount > 0 && (
+              <View style={[styles.metaBadge, { backgroundColor: colors.secondary }]}>
+                <Ionicons name="people-outline" size={14} color={colors.mutedForeground} />
+                <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                  {masjid.memberCount} members
+                </Text>
+              </View>
+            )}
             <View style={[styles.metaBadge, { backgroundColor: masjid.claimed ? colors.highlight : colors.secondary }]}>
               <Ionicons
                 name={masjid.claimed ? "shield-checkmark-outline" : "shield-outline"}
@@ -89,14 +92,33 @@ export default function MasjidDetailScreen() {
                 <Text style={[styles.timeLabel, { color: colors.mutedForeground }]}>Adhan</Text>
                 <Text style={[styles.timeValue, { color: colors.foreground }]}>{pt.adhan}</Text>
               </View>
-              <View style={[styles.timeDivider, { backgroundColor: colors.border }]} />
-              <View style={styles.timeItem}>
-                <Text style={[styles.timeLabel, { color: colors.mutedForeground }]}>Iqamah</Text>
-                <Text style={[styles.timeValue, { color: colors.foreground }]}>{pt.iqamah}</Text>
-              </View>
+              {pt.iqamah ? (
+                <>
+                  <View style={[styles.timeDivider, { backgroundColor: colors.border }]} />
+                  <View style={styles.timeItem}>
+                    <Text style={[styles.timeLabel, { color: colors.mutedForeground }]}>Iqamah</Text>
+                    <Text style={[styles.timeValue, { color: colors.foreground }]}>{pt.iqamah}</Text>
+                  </View>
+                </>
+              ) : null}
             </View>
           </View>
         ))}
+
+        {masjid.website && (
+          <Pressable
+            onPress={() => {
+              const url = /^https?:\/\//i.test(masjid.website!) ? masjid.website! : `https://${masjid.website}`;
+              Linking.openURL(url).catch(() => {});
+            }}
+            style={[styles.websiteBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+          >
+            <Ionicons name="open-outline" size={18} color={colors.foreground} />
+            <Text style={[styles.websiteBtnText, { color: colors.foreground }]}>
+              View Iqamah times on masjid website
+            </Text>
+          </Pressable>
+        )}
 
         {!masjid.claimed && (
           <Pressable
@@ -279,6 +301,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     gap: 14,
+  },
+  websiteBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 10,
+  },
+  websiteBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "Lora_600SemiBold",
   },
   claimText: {
     flex: 1,

@@ -12,7 +12,7 @@ import React, {
 import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CalcMethod, computePrayerTimes, formatIqamah } from "@/utils/prayerTimes";
+import { CalcMethod, computePrayerTimes } from "@/utils/prayerTimes";
 import { scheduleAllPrayerNotifications, scheduleStreakReminderNotification, setupNotificationChannel } from "@/utils/notifications";
 import { api, setApiBaseUrl, getAuthToken, saveAuthCredentials } from "./api";
 
@@ -24,7 +24,7 @@ export interface PrayerTime {
   prayer: Prayer;
   label: string;
   adhan: string;
-  iqamah: string;
+  iqamah?: string;
   adhanDate: string;
   rsvp: RSVPStatus;
   completed: boolean;
@@ -118,6 +118,7 @@ interface AppContextValue {
   updateUser: (updates: Partial<AppUser>) => void;
   onRegistered: (authToken: string) => void;
   friendRSVPs: Record<string, Partial<Record<Prayer, Friend[]>>>;
+  communityCounts: Partial<Record<Prayer, number>>;
   updateMasjidTimes: (masjidId: string, overrides: Partial<Record<Prayer, MasjidTimeOverride>>) => void;
   pendingRSVP: Prayer | null;
   clearPendingRSVP: () => void;
@@ -200,7 +201,7 @@ export function buildPrayerTimes(
       adhanDate = !isNaN(parsed.getTime()) ? parsed.toISOString() : cp.adhanDate;
     }
 
-    const iqamah = override?.iqamah ?? formatIqamah(adhan, cp.iqamahOffset);
+    const iqamah = override?.iqamah;
     const adhanTime = new Date(adhanDate);
     const completed = !isNaN(adhanTime.getTime()) && adhanTime < new Date(now.getTime() - 15 * 60_000);
 
@@ -337,6 +338,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return api.rsvps.friends(undefined, masjidId);
     },
     enabled: !isLoading && hasAuthToken,
+    refetchInterval: 30_000,
+    staleTime: 25_000,
+  });
+
+  const communityCountsQuery = useQuery({
+    queryKey: ["communityCounts", masjidId],
+    queryFn: async () => {
+      if (!masjidId) return null;
+      return api.rsvps.communityCounts(masjidId);
+    },
+    enabled: !isLoading && !!masjidId,
     refetchInterval: 30_000,
     staleTime: 25_000,
   });
@@ -936,6 +948,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { [masjidKey]: {} };
   }, [hasAuthToken, primaryMasjid, localFriends, friendRsvpsQuery.isSuccess, friendRsvpsQuery.data]);
 
+  const communityCounts = useMemo<Partial<Record<Prayer, number>>>(() => {
+    const data = communityCountsQuery.data?.counts ?? {};
+    const out: Partial<Record<Prayer, number>> = {};
+    for (const [k, v] of Object.entries(data)) {
+      out[k as Prayer] = v;
+    }
+    return out;
+  }, [communityCountsQuery.data]);
+
   const value = useMemo<AppContextValue>(
     () => ({
       user,
@@ -961,6 +982,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateUser,
       onRegistered,
       friendRSVPs,
+      communityCounts,
       updateMasjidTimes,
       pendingRSVP,
       setPendingRSVP,
@@ -996,6 +1018,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateUser,
       onRegistered,
       friendRSVPs,
+      communityCounts,
       updateMasjidTimes,
       pendingRSVP,
       setPendingRSVP,
