@@ -29,11 +29,10 @@ export default function SettingsScreen() {
   };
 
   const RECITER_LABELS: Record<string, string> = {
-    makkah: "Makkah",
-    egypt: "Egypt",
-    madina: "Madinah",
-    alafasy: "Mishary Alafasy",
-    husary: "Mahmoud Khalil al-Husary",
+    makkah:      "Makkah",
+    madinah:     "Madinah",
+    mishary:     "Mishary Rashid",
+    abdulkarim:  "Abdul Karim",
   };
 
   const topPaddingForWeb = Platform.OS === "web" ? 67 : insets.top;
