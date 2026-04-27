@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -18,7 +17,7 @@ import { useApp } from "@/context/AppContext";
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, notificationSettings, updateNotificationSettings, primaryMasjid, calcMethod } = useApp();
+  const { user, notificationSettings, primaryMasjid, calcMethod } = useApp();
 
   const CALC_LABELS: Record<string, string> = {
     isna: "ISNA",
@@ -37,13 +36,6 @@ export default function SettingsScreen() {
 
   const topPaddingForWeb = Platform.OS === "web" ? 67 : insets.top;
   const bottomPaddingForWeb = Platform.OS === "web" ? 34 : 0;
-
-  function toggleSetting(key: keyof typeof notificationSettings) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (typeof notificationSettings[key] === "boolean") {
-      updateNotificationSettings({ [key]: !notificationSettings[key] });
-    }
-  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

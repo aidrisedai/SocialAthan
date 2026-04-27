@@ -43,8 +43,10 @@ function NotificationHandler() {
         router.navigate("/(tabs)");
       } else if (actionId === "dismiss") {
         updateRSVP(prayer, "cant" as RSVPStatus);
-      } else {
+      } else if (data?.type === "rsvp_prompt") {
         setPendingRSVP(prayer);
+        router.navigate("/(tabs)");
+      } else {
         router.navigate("/(tabs)");
       }
     });
