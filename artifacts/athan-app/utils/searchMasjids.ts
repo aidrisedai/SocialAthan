@@ -13,6 +13,8 @@ const OVERPASS_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://lz4.overpass-api.de/api/interpreter",
   "https://z.overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 ];
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -28,15 +30,23 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 }
 
 async function fetchFromEndpoint(endpoint: string, query: string): Promise<OverpassElement[]> {
-  const url = `${endpoint}?data=${encodeURIComponent(query)}`;
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
-  if (!response.ok) {
-    throw new Error(`Overpass ${new URL(endpoint).hostname} returned ${response.status}`);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `data=${encodeURIComponent(query)}`,
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error(`Overpass ${new URL(endpoint).hostname} returned ${response.status}`);
+    }
+    const json = await response.json();
+    return json.elements ?? [];
+  } finally {
+    clearTimeout(timer);
   }
-  const json = await response.json();
-  return json.elements ?? [];
 }
 
 export async function searchNearbyMasjids(

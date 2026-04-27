@@ -16,7 +16,12 @@
     "ios": {
       "supportsTablet": false
     },
-    "android": {},
+    "android": {
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
@@ -45,6 +50,13 @@
         }
       ],
       "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "This app uses your location to find nearby masjids and calculate accurate prayer times.",
+          "locationWhenInUsePermission": "This app uses your location to find nearby masjids and calculate accurate prayer times."
+        }
+      ],
       [
         "expo-notifications",
         {
