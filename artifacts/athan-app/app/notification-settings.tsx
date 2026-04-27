@@ -29,9 +29,12 @@ export default function NotificationSettingsScreen() {
   const { notificationSettings, updateNotificationSettings } = useApp();
   const s = notificationSettings;
 
-  function togglePerPrayer(prayer: Prayer, value: boolean) {
+  function togglePerPrayer(prayer: Prayer, field: "adhan" | "iqamah", value: boolean) {
     updateNotificationSettings({
-      perPrayer: { ...s.perPrayer, [prayer]: value },
+      perPrayer: {
+        ...s.perPrayer,
+        [prayer]: { ...s.perPrayer[prayer], [field]: value },
+      },
     });
   }
 
@@ -204,25 +207,41 @@ export default function NotificationSettingsScreen() {
         </View>
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-          Enabled Per Prayer
+          Per-Prayer Notifications
         </Text>
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          {PRAYERS_ORDERED.map((prayer, i) => (
-            <React.Fragment key={prayer}>
-              {i > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
-              <View style={styles.row}>
-                <Text style={[styles.rowLabel, { color: colors.foreground, flex: 1 }]}>
-                  {PRAYER_LABELS[prayer]}
-                </Text>
-                <Switch
-                  value={s.masterEnabled && (s.perPrayer[prayer] ?? true)}
-                  onValueChange={(v) => togglePerPrayer(prayer, v)}
-                  disabled={!s.masterEnabled}
-                  trackColor={{ true: colors.primary }}
-                />
-              </View>
-            </React.Fragment>
-          ))}
+          <View style={[styles.row, { paddingBottom: 4 }]}>
+            <View style={{ flex: 1 }} />
+            <Text style={[styles.perPrayerColLabel, { color: colors.mutedForeground }]}>Adhan</Text>
+            <Text style={[styles.perPrayerColLabel, { color: colors.mutedForeground }]}>Iqamah</Text>
+          </View>
+          {PRAYERS_ORDERED.map((prayer, i) => {
+            const pp = s.perPrayer[prayer] ?? { adhan: true, iqamah: true };
+            return (
+              <React.Fragment key={prayer}>
+                {i > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
+                <View style={styles.row}>
+                  <Text style={[styles.rowLabel, { color: colors.foreground, flex: 1 }]}>
+                    {PRAYER_LABELS[prayer]}
+                  </Text>
+                  <Switch
+                    value={s.masterEnabled && pp.adhan}
+                    onValueChange={(v) => togglePerPrayer(prayer, "adhan", v)}
+                    disabled={!s.masterEnabled}
+                    trackColor={{ true: colors.primary }}
+                    style={styles.perPrayerSwitch}
+                  />
+                  <Switch
+                    value={s.masterEnabled && pp.iqamah}
+                    onValueChange={(v) => togglePerPrayer(prayer, "iqamah", v)}
+                    disabled={!s.masterEnabled}
+                    trackColor={{ true: colors.primary }}
+                    style={styles.perPrayerSwitch}
+                  />
+                </View>
+              </React.Fragment>
+            );
+          })}
         </View>
 
         <View style={styles.noteBox}>
@@ -310,5 +329,16 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     lineHeight: 18,
     flex: 1,
+  },
+  perPrayerColLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    width: 58,
+    textAlign: "center",
+  },
+  perPrayerSwitch: {
+    width: 58,
   },
 });

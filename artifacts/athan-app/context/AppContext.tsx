@@ -76,7 +76,7 @@ export interface NotificationSettings {
   nudges: boolean;
   streakReminders: boolean;
   adhanReciter: string;
-  perPrayer: Record<Prayer, boolean>;
+  perPrayer: Record<Prayer, { adhan: boolean; iqamah: boolean }>;
 }
 
 export interface AppUser {
@@ -170,12 +170,12 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   streakReminders: true,
   adhanReciter: "makkah",
   perPrayer: {
-    fajr: true,
-    dhuhr: true,
-    asr: true,
-    maghrib: true,
-    isha: true,
-    jummah: true,
+    fajr:    { adhan: true, iqamah: true },
+    dhuhr:   { adhan: true, iqamah: true },
+    asr:     { adhan: true, iqamah: true },
+    maghrib: { adhan: true, iqamah: true },
+    isha:    { adhan: true, iqamah: true },
+    jummah:  { adhan: true, iqamah: true },
   },
 };
 
@@ -374,6 +374,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setPrimaryMasjid = useCallback((m: Masjid) => {
     setPrimaryMasjidState(m);
     AsyncStorage.setItem("primaryMasjid", JSON.stringify(m));
+    setMasjidList((prev) =>
+      prev.map((entry) => (entry.id === m.id ? { ...entry, ...m } : entry))
+    );
   }, []);
 
   const setCalcMethod = useCallback((method: CalcMethod) => {

@@ -83,13 +83,12 @@ export async function scheduleAllPrayerNotifications(
   const rsvpPromptEnabled = settings.rsvpPrompt;
 
   for (const prayer of prayerTimes) {
-    const perPrayerEnabled = settings.perPrayer[prayer.prayer] ?? true;
-    if (!perPrayerEnabled) continue;
+    const perPrayer = settings.perPrayer[prayer.prayer] ?? { adhan: true, iqamah: true };
 
     const adhanDate = parseTimeToDate(prayer.adhan);
     if (!adhanDate) continue;
 
-    if (settings.adhan && adhanDate > now) {
+    if (settings.adhan && perPrayer.adhan && adhanDate > now) {
       try {
         await Notifications.scheduleNotificationAsync({
           content: {
@@ -110,7 +109,7 @@ export async function scheduleAllPrayerNotifications(
       } catch (_) {}
     }
 
-    if (settings.iqamah) {
+    if (settings.iqamah && perPrayer.iqamah) {
       const iqamahDate = parseTimeToDate(prayer.iqamah);
       if (iqamahDate) {
         const reminderDate = addMinutes(iqamahDate, -10);

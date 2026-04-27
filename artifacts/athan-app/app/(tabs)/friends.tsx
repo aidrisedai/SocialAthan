@@ -40,7 +40,7 @@ const DISCOVER_ITEMS: DiscoverItem[] = [
 export default function FriendsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { friends, friendRSVPs, primaryMasjid, prayerTimes, addFriend } = useApp();
+  const { friends, friendRSVPs, primaryMasjid, prayerTimes, addFriend, sendMessage } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>("Going Now");
   const [searchQuery, setSearchQuery] = useState("");
 
