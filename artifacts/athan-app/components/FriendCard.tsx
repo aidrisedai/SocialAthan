@@ -14,16 +14,20 @@ interface Props {
   friend: Friend;
   prayerLabel?: string;
   showDuas?: boolean;
+  onViewProfile?: (friend: Friend) => void;
   onNudge?: (friend: Friend) => void;
   onMessage?: (friend: Friend) => void;
 }
 
-export function FriendCard({ friend, prayerLabel, showDuas, onNudge, onMessage }: Props) {
+export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNudge, onMessage }: Props) {
   const colors = useColors();
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={styles.topRow}>
+      <Pressable
+        style={styles.topRow}
+        onPress={onViewProfile ? () => onViewProfile(friend) : undefined}
+      >
         <View style={[styles.avatar, { backgroundColor: colors.secondary }]}>
           <Text style={[styles.avatarText, { color: colors.primary }]}>
             {friend.name.charAt(0)}
@@ -67,7 +71,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onNudge, onMessage }
             </Pressable>
           )}
         </View>
-      </View>
+      </Pressable>
 
       {showDuas && (
         <View style={[styles.duasRow, { borderTopColor: colors.border }]}>

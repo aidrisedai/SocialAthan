@@ -107,6 +107,22 @@ export default function MasjidDetailScreen() {
           </Pressable>
         )}
 
+        <Pressable
+          onPress={() => router.push({ pathname: "/masjid-chat/[id]", params: { id: masjid.id } })}
+          style={[styles.chatBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+        >
+          <Ionicons name="chatbubbles-outline" size={20} color={colors.primary} />
+          <View style={styles.chatBtnText}>
+            <Text style={[styles.chatBtnTitle, { color: colors.foreground }]}>
+              Community Chat
+            </Text>
+            <Text style={[styles.chatBtnSub, { color: colors.mutedForeground }]}>
+              Chat with members of this masjid
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+        </Pressable>
+
         {!isPrimary && (
           <Pressable
             onPress={() => { setPrimaryMasjid(masjid); router.back(); }}
@@ -248,6 +264,29 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   claimSub: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+  },
+  chatBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    margin: 16,
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 14,
+  },
+  chatBtnText: {
+    flex: 1,
+    gap: 2,
+  },
+  chatBtnTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  chatBtnSub: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
   },

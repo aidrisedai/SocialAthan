@@ -90,39 +90,19 @@ export default function SettingsScreen() {
         )}
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Notifications</Text>
-        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.switchRow}>
-            <Text style={[styles.rowLabel, { color: colors.foreground }]}>All Notifications</Text>
-            <Switch
-              value={notificationSettings.masterEnabled}
-              onValueChange={() => toggleSetting("masterEnabled")}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.card}
-            />
+        <Pressable
+          onPress={() => router.push("/notification-settings")}
+          style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <Ionicons name="notifications-outline" size={20} color={colors.primary} />
+          <View style={styles.rowText}>
+            <Text style={[styles.rowLabel, { color: colors.foreground }]}>Notification Settings</Text>
+            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
+              {notificationSettings.masterEnabled ? "Adhan · Iqamah · Reminders" : "All off"}
+            </Text>
           </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          {([
-            ["adhan", "Adhan"],
-            ["iqamah", "Iqamah Reminder"],
-            ["friendRSVPs", "Friend RSVPs"],
-            ["encouragements", "Duas & Reactions"],
-            ["nudges", "Nudges"],
-            ["streakReminders", "Streak Reminders"],
-          ] as const).map(([key, label]) => (
-            <View key={key} style={styles.switchRow}>
-              <Text style={[styles.rowLabelSmall, { color: notificationSettings.masterEnabled ? colors.foreground : colors.mutedForeground }]}>
-                {label}
-              </Text>
-              <Switch
-                value={notificationSettings[key] as boolean}
-                onValueChange={() => toggleSetting(key)}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.card}
-                disabled={!notificationSettings.masterEnabled}
-              />
-            </View>
-          ))}
-        </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
+        </Pressable>
 
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Prayer Calculation</Text>
         <Pressable

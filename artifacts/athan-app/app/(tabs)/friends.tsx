@@ -60,6 +60,10 @@ export default function FriendsScreen() {
   const topPaddingForWeb = Platform.OS === "web" ? 67 : insets.top;
   const bottomPaddingForWeb = Platform.OS === "web" ? 34 : 0;
 
+  function handleViewProfile(friend: Friend) {
+    router.push({ pathname: "/friend/[id]", params: { id: friend.id } });
+  }
+
   function handleNudge(friend: Friend) {
     Alert.alert("Nudge sent!", `A gentle reminder was sent to ${friend.name}.`);
   }
@@ -171,6 +175,7 @@ export default function FriendsScreen() {
                   friend={f}
                   prayerLabel={nextPrayer?.label}
                   showDuas
+                  onViewProfile={handleViewProfile}
                   onNudge={handleNudge}
                   onMessage={handleMessage}
                 />
@@ -205,6 +210,7 @@ export default function FriendsScreen() {
                 <FriendCard
                   key={f.id}
                   friend={f}
+                  onViewProfile={handleViewProfile}
                   onNudge={handleNudge}
                   onMessage={handleMessage}
                 />

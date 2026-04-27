@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import {
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -32,7 +34,16 @@ export default function StreaksScreen() {
         }}
       >
         <View style={styles.headerSection}>
-          <Text style={[styles.title, { color: colors.foreground }]}>Streaks</Text>
+          <View style={styles.headerRow}>
+            <Text style={[styles.title, { color: colors.foreground }]}>Streaks</Text>
+            <Pressable
+              onPress={() => router.push("/streak-detail")}
+              style={[styles.detailBtn, { backgroundColor: colors.secondary }]}
+            >
+              <Text style={[styles.detailBtnText, { color: colors.primary }]}>Detail</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+            </Pressable>
+          </View>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             Personal — only you can see this
           </Text>
@@ -86,6 +97,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 16,
     gap: 4,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  detailBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+  },
+  detailBtnText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
   },
   title: {
     fontSize: 28,

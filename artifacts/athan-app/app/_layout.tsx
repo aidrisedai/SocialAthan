@@ -6,7 +6,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Redirect, Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -23,31 +23,33 @@ const queryClient = new QueryClient();
 function RootLayoutNav() {
   const { onboardingComplete } = useApp();
 
+  useEffect(() => {
+    if (!onboardingComplete) {
+      router.replace("/(onboarding)/welcome");
+    }
+  }, [onboardingComplete]);
+
   return (
     <Stack screenOptions={{ headerBackTitle: "Back", headerShown: false }}>
       <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="masjid-select" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="masjid/[id]" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen name="masjid-chat/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="friend-discover" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="friend-search" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen name="friend/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="admin-portal" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="qr-scan" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="invite-link" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="calculation-method" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="adhan-audio" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen name="streak-detail" options={{ headerShown: false }} />
+      <Stack.Screen name="notification-settings" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="index" options={{ headerShown: false }} />
     </Stack>
   );
-}
-
-function AppGate() {
-  const { onboardingComplete } = useApp();
-  if (!onboardingComplete) {
-    return <Redirect href="/(onboarding)/welcome" />;
-  }
-  return <Redirect href="/(tabs)" />;
 }
 
 export default function RootLayout() {

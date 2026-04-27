@@ -70,6 +70,7 @@ export interface NotificationSettings {
   masterEnabled: boolean;
   adhan: boolean;
   iqamah: boolean;
+  rsvpPrompt: boolean;
   friendRSVPs: boolean;
   encouragements: boolean;
   nudges: boolean;
@@ -157,6 +158,7 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   masterEnabled: true,
   adhan: true,
   iqamah: true,
+  rsvpPrompt: true,
   friendRSVPs: true,
   encouragements: true,
   nudges: true,
@@ -252,7 +254,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (ns) setNotificationSettings(JSON.parse(ns));
         if (mthd) setCalcMethodState(mthd as CalcMethod);
         if (ml) setMasjidList(JSON.parse(ml));
-      } catch {}
+      } catch (e) {
+        if (__DEV__) console.warn("[AppContext] Failed to load persisted state:", e);
+      }
       setIsLoading(false);
     }
     load();
@@ -266,7 +270,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (status !== "granted") return;
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
         setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
-      } catch {}
+      } catch (e) {
+        if (__DEV__) console.warn("[AppContext] Location fetch failed:", e);
+      }
     }
     getLocation();
   }, []);

@@ -2,29 +2,59 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import type { PrayerTime, NotificationSettings } from "@/context/AppContext";
 
-const NOTIFICATION_CHANNEL_ID = "athan-prayers";
+const ADHAN_CHANNEL_ID = "adhan-call";
+const IQAMAH_CHANNEL_ID = "iqamah-reminder";
+const SOCIAL_CHANNEL_ID = "social";
+
 const ADHAN_CATEGORY = "ADHAN";
 const IQAMAH_CATEGORY = "IQAMAH";
+const RSVP_CATEGORY = "RSVP_PROMPT";
 
 export async function setupNotificationChannel(): Promise<void> {
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync(NOTIFICATION_CHANNEL_ID, {
-      name: "Prayer Times",
+    await Notifications.setNotificationChannelAsync(ADHAN_CHANNEL_ID, {
+      name: "Adhan Call",
+      description: "Critical prayer-time alert — always plays regardless of DND",
       importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
+      vibrationPattern: [0, 400, 200, 400],
       lightColor: "#1B6B5B",
       enableVibrate: true,
       lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
       bypassDnd: true,
     });
+
+    await Notifications.setNotificationChannelAsync(IQAMAH_CHANNEL_ID, {
+      name: "Iqamah Reminder",
+      description: "10-minute heads-up before congregational prayer starts",
+      importance: Notifications.AndroidImportance.HIGH,
+      vibrationPattern: [0, 250],
+      enableVibrate: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: false,
+    });
+
+    await Notifications.setNotificationChannelAsync(SOCIAL_CHANNEL_ID, {
+      name: "Social & Reminders",
+      description: "Friend RSVPs, nudges, and encouragements",
+      importance: Notifications.AndroidImportance.DEFAULT,
+      enableVibrate: false,
+      bypassDnd: false,
+    });
   }
 
   await Notifications.setNotificationCategoryAsync(ADHAN_CATEGORY, [
-    { identifier: "view", buttonTitle: "View prayers" },
+    { identifier: "open", buttonTitle: "View prayers" },
   ]);
 
   await Notifications.setNotificationCategoryAsync(IQAMAH_CATEGORY, [
     { identifier: "going", buttonTitle: "Mark as Going" },
+    { identifier: "dismiss", buttonTitle: "Dismiss", options: { isDestructive: true } },
+  ]);
+
+  await Notifications.setNotificationCategoryAsync(RSVP_CATEGORY, [
+    { identifier: "going", buttonTitle: "Going ✓" },
+    { identifier: "maybe", buttonTitle: "Maybe" },
+    { identifier: "dismiss", buttonTitle: "Not today", options: { isDestructive: true } },
   ]);
 }
 
@@ -50,15 +80,16 @@ export async function scheduleAllPrayerNotifications(
   if (!settings.masterEnabled) return;
 
   const now = new Date();
+  const rsvpPromptEnabled = settings.rsvpPrompt;
 
   for (const prayer of prayerTimes) {
     const perPrayerEnabled = settings.perPrayer[prayer.prayer] ?? true;
     if (!perPrayerEnabled) continue;
 
     const adhanDate = parseTimeToDate(prayer.adhan);
-    if (!adhanDate || adhanDate <= now) continue;
+    if (!adhanDate) continue;
 
-    if (settings.adhan) {
+    if (settings.adhan && adhanDate > now) {
       try {
         await Notifications.scheduleNotificationAsync({
           content: {
@@ -68,51 +99,66 @@ export async function scheduleAllPrayerNotifications(
             categoryIdentifier: ADHAN_CATEGORY,
             data: { prayer: prayer.prayer, type: "adhan" },
             ...(Platform.OS === "ios"
-              ? {
-                  interruptionLevel: "timeSensitive" as const,
-                }
-              : {
-                  channelId: NOTIFICATION_CHANNEL_ID,
-                  priority: "max",
-                }),
+              ? { interruptionLevel: "critical" as const }
+              : { channelId: ADHAN_CHANNEL_ID, priority: "max" }),
           },
           trigger: {
             type: Notifications.SchedulableTriggerInputTypes.DATE,
             date: adhanDate,
           },
         });
-      } catch {}
+      } catch (_) {}
     }
 
     if (settings.iqamah) {
       const iqamahDate = parseTimeToDate(prayer.iqamah);
-      if (!iqamahDate) continue;
-      const reminderDate = addMinutes(iqamahDate, -10);
-      if (reminderDate <= now) continue;
+      if (iqamahDate) {
+        const reminderDate = addMinutes(iqamahDate, -10);
+        if (reminderDate > now) {
+          try {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: `${prayer.label} · Iqamah in 10 minutes`,
+                body: `${prayer.iqamah} — Head to the masjid now`,
+                sound: true,
+                categoryIdentifier: IQAMAH_CATEGORY,
+                data: { prayer: prayer.prayer, type: "iqamah" },
+                ...(Platform.OS === "ios"
+                  ? { interruptionLevel: "timeSensitive" as const }
+                  : { channelId: IQAMAH_CHANNEL_ID }),
+              },
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.DATE,
+                date: reminderDate,
+              },
+            });
+          } catch (_) {}
+        }
+      }
+    }
 
-      try {
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: `${prayer.label} · Iqamah in 10 minutes`,
-            body: `${prayer.iqamah} — Head to the masjid now`,
-            sound: true,
-            categoryIdentifier: IQAMAH_CATEGORY,
-            data: { prayer: prayer.prayer, type: "iqamah" },
-            ...(Platform.OS === "ios"
-              ? {
-                  interruptionLevel: "timeSensitive" as const,
-                }
-              : {
-                  channelId: NOTIFICATION_CHANNEL_ID,
-                  priority: "max",
-                }),
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: reminderDate,
-          },
-        });
-      } catch {}
+    if (rsvpPromptEnabled && adhanDate > now) {
+      const promptDate = addMinutes(adhanDate, -20);
+      if (promptDate > now) {
+        try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: `${prayer.label} in 20 minutes`,
+              body: "Are you going to the masjid today?",
+              sound: false,
+              categoryIdentifier: RSVP_CATEGORY,
+              data: { prayer: prayer.prayer, type: "rsvp_prompt" },
+              ...(Platform.OS === "ios"
+                ? { interruptionLevel: "active" as const }
+                : { channelId: SOCIAL_CHANNEL_ID }),
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DATE,
+              date: promptDate,
+            },
+          });
+        } catch (_) {}
+      }
     }
   }
 }
