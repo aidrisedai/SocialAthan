@@ -276,17 +276,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (Platform.OS === "web") return;
-    async function getLocation() {
+    let sub: Location.LocationSubscription | undefined;
+
+    async function setupLocation() {
       try {
         const { status } = await Location.getForegroundPermissionsAsync();
         if (status !== "granted") return;
+
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-        setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        const initial = { lat: loc.coords.latitude, lng: loc.coords.longitude };
+        setCoords(initial);
+
+        sub = await Location.watchPositionAsync(
+          { accuracy: Location.Accuracy.Low, distanceInterval: 5000, timeInterval: 300_000 },
+          (position) => {
+            const newLat = position.coords.latitude;
+            const newLng = position.coords.longitude;
+            setCoords((prev) => {
+              const dLat = (newLat - prev.lat) * (Math.PI / 180);
+              const dLng = (newLng - prev.lng) * (Math.PI / 180);
+              const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(prev.lat * (Math.PI / 180)) *
+                  Math.cos(newLat * (Math.PI / 180)) *
+                  Math.sin(dLng / 2) ** 2;
+              const dist = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              if (dist > 5) {
+                const Alert = require("react-native").Alert;
+                Alert.alert(
+                  "You've Moved",
+                  "Looks like you're in a new area. Would you like to find a masjid nearby?",
+                  [
+                    { text: "Not Now", style: "cancel" },
+                    {
+                      text: "Find Masjid",
+                      onPress: () => {
+                        const router = require("expo-router").router;
+                        router.push("/masjid-select");
+                      },
+                    },
+                  ]
+                );
+                return { lat: newLat, lng: newLng };
+              }
+              return prev;
+            });
+          }
+        );
       } catch (e) {
-        if (__DEV__) console.warn("[AppContext] Location fetch failed:", e);
+        if (__DEV__) console.warn("[AppContext] Location setup failed:", e);
       }
     }
-    getLocation();
+
+    setupLocation();
+    return () => { sub?.remove(); };
   }, []);
 
   useEffect(() => {

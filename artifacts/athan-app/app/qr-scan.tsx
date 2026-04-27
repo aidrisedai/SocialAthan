@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
+  Alert,
+  Platform,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -10,14 +12,115 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useApp } from "@/context/AppContext";
+import { useApp, Friend } from "@/context/AppContext";
+
+type ViewMode = "show" | "scan";
+
+let CameraView: React.ComponentType<{
+  style?: object;
+  facing?: "front" | "back";
+  barcodeScannerSettings?: { barcodeTypes: string[] };
+  onBarcodeScanned?: (data: { data: string }) => void;
+}> | null = null;
+
+let useCameraPermissions: (() => [
+  { granted: boolean } | null,
+  () => Promise<{ granted: boolean }>
+]) | null = null;
+
+if (Platform.OS !== "web") {
+  try {
+    const cam = require("expo-camera");
+    CameraView = cam.CameraView;
+    useCameraPermissions = cam.useCameraPermissions;
+  } catch {}
+}
+
+function useCamPermissions() {
+  const [status, setStatus] = useState<{ granted: boolean } | null>(null);
+  async function requestPermission() {
+    const result = { granted: false };
+    if (useCameraPermissions) return result;
+    return result;
+  }
+  return [status, requestPermission] as const;
+}
 
 export default function QRScanScreen() {
   const colors = useColors();
-  const { user } = useApp();
-  type ViewMode = "scan" | "show";
+  const { user, addFriend, friends } = useApp();
   const [view, setView] = useState<ViewMode>("show");
-  const VIEW_TABS: ViewMode[] = ["show", "scan"];
+  const [scanned, setScanned] = useState(false);
+
+  const hookResult = useCameraPermissions ? useCameraPermissions() : useCamPermissions();
+  const [permission, requestPermission] = hookResult as [
+    { granted: boolean } | null,
+    () => Promise<{ granted: boolean }>
+  ];
+
+  const handleBarcode = useCallback(
+    ({ data }: { data: string }) => {
+      if (scanned) return;
+      setScanned(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      const match = data.match(/athan\.app\/invite\/([^/?#]+)/);
+      const username = match?.[1] ?? data.trim();
+
+      if (username === user?.username) {
+        Alert.alert("That's you!", "You scanned your own QR code.", [
+          { text: "OK", onPress: () => setScanned(false) },
+        ]);
+        return;
+      }
+
+      const alreadyFriend = friends.some(
+        (f) => f.username.toLowerCase() === username.toLowerCase()
+      );
+      if (alreadyFriend) {
+        Alert.alert("Already Friends", `You're already connected with @${username}.`, [
+          { text: "OK", onPress: () => { setScanned(false); router.back(); } },
+        ]);
+        return;
+      }
+
+      const newFriend: Friend = {
+        id: `qr_${Date.now()}`,
+        name: username,
+        username,
+        isConnected: true,
+      };
+
+      Alert.alert(
+        "Add Friend",
+        `Add @${username} as a friend?`,
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+            onPress: () => setScanned(false),
+          },
+          {
+            text: "Add Friend",
+            onPress: () => {
+              addFriend(newFriend);
+              router.back();
+            },
+          },
+        ]
+      );
+    },
+    [scanned, user, friends, addFriend]
+  );
+
+  async function handleSwitchToScan() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (!permission?.granted) {
+      await requestPermission();
+    }
+    setView("scan");
+    setScanned(false);
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -30,16 +133,28 @@ export default function QRScanScreen() {
       </View>
 
       <View style={styles.tabs}>
-        {VIEW_TABS.map((t) => (
+        {(["show", "scan"] as ViewMode[]).map((t) => (
           <Pressable
             key={t}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setView(t); }}
+            onPress={() => {
+              if (t === "scan") {
+                handleSwitchToScan();
+              } else {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setView("show");
+              }
+            }}
             style={[
               styles.tab,
               { backgroundColor: view === t ? colors.primary : colors.secondary },
             ]}
           >
-            <Text style={[styles.tabText, { color: view === t ? colors.primaryForeground : colors.mutedForeground }]}>
+            <Text
+              style={[
+                styles.tabText,
+                { color: view === t ? colors.primaryForeground : colors.mutedForeground },
+              ]}
+            >
               {t === "show" ? "My Code" : "Scan Code"}
             </Text>
           </Pressable>
@@ -56,8 +171,9 @@ export default function QRScanScreen() {
                   style={[
                     styles.qrCell,
                     {
-                      backgroundColor:
-                        [0, 2, 6, 8, 1, 4, 5, 7].includes(i) ? colors.primary : "transparent",
+                      backgroundColor: [0, 2, 6, 8, 1, 4, 5, 7].includes(i)
+                        ? colors.primary
+                        : "transparent",
                     },
                   ]}
                 />
@@ -65,6 +181,9 @@ export default function QRScanScreen() {
             </View>
             <Text style={[styles.qrUsername, { color: colors.foreground }]}>
               @{user?.username ?? "username"}
+            </Text>
+            <Text style={[styles.qrLink, { color: colors.mutedForeground }]}>
+              athan.app/invite/{user?.username ?? "username"}
             </Text>
             <Text style={[styles.qrNote, { color: colors.mutedForeground }]}>
               Show this to friends to add you instantly
@@ -75,19 +194,50 @@ export default function QRScanScreen() {
 
       {view === "scan" && (
         <View style={styles.scanSection}>
-          <View style={[styles.scanFrame, { borderColor: colors.primary }]}>
-            <View style={[styles.scanCorner, styles.topLeft, { borderColor: colors.primary }]} />
-            <View style={[styles.scanCorner, styles.topRight, { borderColor: colors.primary }]} />
-            <View style={[styles.scanCorner, styles.bottomLeft, { borderColor: colors.primary }]} />
-            <View style={[styles.scanCorner, styles.bottomRight, { borderColor: colors.primary }]} />
-            <Ionicons name="qr-code-outline" size={64} color={colors.mutedForeground} />
-            <Text style={[styles.scanText, { color: colors.mutedForeground }]}>
-              Point your camera at a QR code
-            </Text>
-          </View>
-          <Text style={[styles.scanNote, { color: colors.mutedForeground }]}>
-            Camera scanning available on device
-          </Text>
+          {Platform.OS !== "web" && CameraView && permission?.granted ? (
+            <View style={styles.cameraWrapper}>
+              <CameraView
+                style={styles.camera}
+                facing="back"
+                barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                onBarcodeScanned={scanned ? undefined : handleBarcode}
+              />
+              <View style={styles.overlay} pointerEvents="none">
+                <View style={[styles.scanCorner, styles.topLeft, { borderColor: colors.primary }]} />
+                <View style={[styles.scanCorner, styles.topRight, { borderColor: colors.primary }]} />
+                <View style={[styles.scanCorner, styles.bottomLeft, { borderColor: colors.primary }]} />
+                <View style={[styles.scanCorner, styles.bottomRight, { borderColor: colors.primary }]} />
+              </View>
+              {scanned && (
+                <Pressable
+                  style={[styles.rescanBtn, { backgroundColor: colors.primary }]}
+                  onPress={() => setScanned(false)}
+                >
+                  <Text style={[styles.rescanText, { color: colors.primaryForeground }]}>
+                    Scan Again
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          ) : (
+            <View style={styles.permissionBox}>
+              <Ionicons name="camera-outline" size={52} color={colors.mutedForeground} />
+              <Text style={[styles.permissionText, { color: colors.foreground }]}>
+                Camera Access Required
+              </Text>
+              <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+                Allow camera access to scan QR codes.
+              </Text>
+              <Pressable
+                onPress={requestPermission}
+                style={[styles.allowBtn, { backgroundColor: colors.primary }]}
+              >
+                <Text style={[styles.allowBtnText, { color: colors.primaryForeground }]}>
+                  Allow Camera
+                </Text>
+              </Pressable>
+            </View>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -137,7 +287,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 32,
     alignItems: "center",
-    gap: 16,
+    gap: 12,
   },
   qrGrid: {
     width: 160,
@@ -159,6 +309,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "Inter_700Bold",
   },
+  qrLink: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+  },
   qrNote: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
@@ -168,70 +322,98 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 40,
-    gap: 16,
+    paddingHorizontal: 24,
   },
-  scanFrame: {
-    width: 260,
-    height: 260,
+  cameraWrapper: {
+    width: 280,
+    height: 280,
     borderRadius: 24,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
     position: "relative",
-    gap: 12,
+  },
+  camera: {
+    flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   scanCorner: {
     position: "absolute",
-    width: 24,
-    height: 24,
-    borderColor: "transparent",
-    borderWidth: 3,
+    width: 28,
+    height: 28,
+    borderWidth: 0,
   },
   topLeft: {
-    top: -2,
-    left: -2,
+    top: 12,
+    left: 12,
     borderTopWidth: 4,
     borderLeftWidth: 4,
-    borderBottomWidth: 0,
-    borderRightWidth: 0,
+    borderColor: "transparent",
     borderRadius: 4,
   },
   topRight: {
-    top: -2,
-    right: -2,
+    top: 12,
+    right: 12,
     borderTopWidth: 4,
     borderRightWidth: 4,
-    borderBottomWidth: 0,
-    borderLeftWidth: 0,
+    borderColor: "transparent",
     borderRadius: 4,
   },
   bottomLeft: {
-    bottom: -2,
-    left: -2,
+    bottom: 12,
+    left: 12,
     borderBottomWidth: 4,
     borderLeftWidth: 4,
-    borderTopWidth: 0,
-    borderRightWidth: 0,
+    borderColor: "transparent",
     borderRadius: 4,
   },
   bottomRight: {
-    bottom: -2,
-    right: -2,
+    bottom: 12,
+    right: 12,
     borderBottomWidth: 4,
     borderRightWidth: 4,
-    borderTopWidth: 0,
-    borderLeftWidth: 0,
+    borderColor: "transparent",
     borderRadius: 4,
   },
-  scanText: {
+  rescanBtn: {
+    position: "absolute",
+    bottom: 16,
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  rescanText: {
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  permissionBox: {
+    alignItems: "center",
+    gap: 16,
+    padding: 32,
+  },
+  permissionText: {
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
+    textAlign: "center",
+  },
+  permissionSub: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
     textAlign: "center",
+    lineHeight: 20,
   },
-  scanNote: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    textAlign: "center",
+  allowBtn: {
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 8,
+  },
+  allowBtnText: {
+    fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
   },
 });

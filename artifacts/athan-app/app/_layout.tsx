@@ -15,14 +15,14 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AppProvider, useApp, Prayer } from "@/context/AppContext";
+import { AppProvider, useApp, Prayer, RSVPStatus } from "@/context/AppContext";
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
 function NotificationHandler() {
-  const { setPendingRSVP } = useApp();
+  const { setPendingRSVP, updateRSVP } = useApp();
 
   useEffect(() => {
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
@@ -31,23 +31,23 @@ function NotificationHandler() {
         type?: string;
       };
       const prayer = data?.prayer as Prayer | undefined;
-      const type = data?.type;
       const actionId = response.actionIdentifier;
 
-      if (prayer) {
-        if (
-          type === "rsvp_prompt" ||
-          type === "iqamah" ||
-          actionId === "going" ||
-          actionId === Notifications.DEFAULT_ACTION_IDENTIFIER
-        ) {
-          setPendingRSVP(prayer);
-          router.navigate("/(tabs)");
-        }
+      if (!prayer) return;
+
+      if (actionId === "going") {
+        updateRSVP(prayer, "going" as RSVPStatus);
+        router.navigate("/(tabs)");
+      } else if (actionId === "maybe") {
+        updateRSVP(prayer, "maybe" as RSVPStatus);
+        router.navigate("/(tabs)");
+      } else {
+        setPendingRSVP(prayer);
+        router.navigate("/(tabs)");
       }
     });
     return () => sub.remove();
-  }, [setPendingRSVP]);
+  }, [setPendingRSVP, updateRSVP]);
 
   return null;
 }
