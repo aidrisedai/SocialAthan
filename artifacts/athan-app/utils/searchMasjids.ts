@@ -51,7 +51,7 @@ export async function searchNearbyMasjids(
     `  way["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});`,
     `  relation["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});`,
     `);`,
-    `out center 50;`,
+    `out center tags 50;`,
   ].join("\n");
 
   let lastError: Error | null = null;
@@ -98,6 +98,12 @@ export async function searchNearbyMasjids(
 
     const distMi = parseFloat((haversineKm(lat, lng, elLat, elLng) * 0.621371).toFixed(1));
 
+    const website =
+      el.tags?.["website"] ??
+      el.tags?.["contact:website"] ??
+      el.tags?.["url"] ??
+      undefined;
+
     results.push({
       id: `osm_${el.type}_${el.id}`,
       name: rawName,
@@ -107,6 +113,7 @@ export async function searchNearbyMasjids(
       lng: elLng,
       claimed: false,
       memberCount: 0,
+      website,
     });
   }
 

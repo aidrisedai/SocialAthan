@@ -135,4 +135,13 @@ export const api = {
     byUsername: (username: string) =>
       apiFetch<{ user: ApiUser }>(`/users/by-username/${username}`),
   },
+  masjids: {
+    fetchTimes: (url: string) =>
+      apiFetch<{
+        overrides: Partial<Record<string, { adhan?: string; iqamah?: string }>>;
+      }>("/masjids/fetch-times", {
+        method: "POST",
+        body: JSON.stringify({ url }),
+      }),
+  },
 };

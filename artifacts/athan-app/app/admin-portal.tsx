@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Pressable,
   SafeAreaView,
@@ -14,6 +15,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useApp, Prayer, MasjidTimeOverride, buildPrayerTimes } from "@/context/AppContext";
+import { api } from "@/context/api";
 
 const PRAYERS: Array<{ prayer: Prayer; label: string }> = [
   { prayer: "fajr", label: "Fajr" },
@@ -36,6 +38,12 @@ export default function AdminPortalScreen() {
   const [claimed, setClaimed] = useState(targetMasjid?.claimed ?? false);
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [claimEmail, setClaimEmail] = useState("");
+
+  const [showFetchForm, setShowFetchForm] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState(targetMasjid?.website ?? "");
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [fetchSuccess, setFetchSuccess] = useState(false);
 
   const targetPrayerTimes =
     targetMasjid && targetMasjid.id !== primaryMasjid?.id
@@ -67,6 +75,41 @@ export default function AdminPortalScreen() {
 
   function validateTime(val: string) {
     return val.trim() === "" || TIME_PATTERN.test(val.trim());
+  }
+
+  async function handleFetchTimes() {
+    const url = websiteUrl.trim();
+    if (!url) return;
+    setIsFetching(true);
+    setFetchError(null);
+    setFetchSuccess(false);
+    try {
+      const { overrides } = await api.masjids.fetchTimes(url);
+      const filled: Partial<PrayerTimeMap> = {};
+      let count = 0;
+      for (const prayer of ["fajr", "dhuhr", "asr", "maghrib", "isha", "jummah"] as Prayer[]) {
+        const o = overrides[prayer];
+        if (o?.adhan || o?.iqamah) {
+          filled[prayer] = {
+            adhan: o.adhan ?? editedTimes[prayer].adhan,
+            iqamah: o.iqamah ?? editedTimes[prayer].iqamah,
+          };
+          count++;
+        }
+      }
+      if (count === 0) {
+        setFetchError("No prayer times found on that page. Try a different URL.");
+      } else {
+        setEditedTimes((prev) => ({ ...prev, ...filled }));
+        setFetchSuccess(true);
+        setShowFetchForm(false);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      setFetchError(msg.includes("404") ? "No prayer times found on that page." : `Could not fetch: ${msg}`);
+    } finally {
+      setIsFetching(false);
+    }
   }
 
   function handleSave() {
@@ -231,6 +274,79 @@ export default function AdminPortalScreen() {
               Set official Adhan and Iqamah times. These override calculated times for all
               members of this masjid.
             </Text>
+
+            {fetchSuccess && (
+              <View style={[styles.successBanner, { backgroundColor: "#0D2B1A", borderColor: "#30D158" }]}>
+                <Ionicons name="checkmark-circle" size={16} color="#30D158" />
+                <Text style={[styles.successText, { color: "#30D158" }]}>
+                  Times imported — review and save below.
+                </Text>
+              </View>
+            )}
+
+            {!showFetchForm ? (
+              <Pressable
+                onPress={() => { setShowFetchForm(true); setFetchSuccess(false); }}
+                style={[styles.fetchBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+              >
+                <Ionicons name="globe-outline" size={18} color={colors.accent ?? "#30D158"} />
+                <Text style={[styles.fetchBtnText, { color: colors.accent ?? "#30D158" }]}>
+                  Auto-import from Website
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={[styles.fetchForm, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Text style={[styles.fetchFormTitle, { color: colors.foreground }]}>
+                  Import from Masjid Website
+                </Text>
+                <Text style={[styles.fetchFormNote, { color: colors.mutedForeground }]}>
+                  Paste your masjid's website URL and we'll automatically read the prayer schedule.
+                </Text>
+                <View style={[styles.urlInputRow, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                  <Ionicons name="link-outline" size={16} color={colors.mutedForeground} />
+                  <TextInput
+                    style={[styles.urlInput, { color: colors.foreground }]}
+                    placeholder="https://yourmasjid.org"
+                    placeholderTextColor={colors.mutedForeground}
+                    value={websiteUrl}
+                    onChangeText={setWebsiteUrl}
+                    autoCapitalize="none"
+                    keyboardType="url"
+                    autoCorrect={false}
+                  />
+                </View>
+                {fetchError && (
+                  <View style={[styles.fetchErrorRow]}>
+                    <Ionicons name="alert-circle-outline" size={14} color="#FF453A" />
+                    <Text style={[styles.fetchErrorText, { color: "#FF453A" }]}>{fetchError}</Text>
+                  </View>
+                )}
+                <View style={styles.fetchFormBtns}>
+                  <Pressable
+                    onPress={() => { setShowFetchForm(false); setFetchError(null); }}
+                    style={[styles.cancelBtn, { backgroundColor: colors.secondary }]}
+                  >
+                    <Text style={[styles.cancelBtnText, { color: colors.foreground }]}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleFetchTimes}
+                    disabled={isFetching || !websiteUrl.trim()}
+                    style={[
+                      styles.submitBtn,
+                      { backgroundColor: isFetching || !websiteUrl.trim() ? colors.secondary : colors.primary },
+                    ]}
+                  >
+                    {isFetching ? (
+                      <ActivityIndicator size="small" color={colors.primaryForeground} />
+                    ) : (
+                      <Text style={[styles.submitBtnText, { color: colors.primaryForeground }]}>
+                        Import Times
+                      </Text>
+                    )}
+                  </Pressable>
+                </View>
+              </View>
+            )}
 
             {PRAYERS.map(({ prayer, label }) => (
               <View
@@ -481,5 +597,83 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     fontFamily: "Lora_600SemiBold",
+  },
+  fetchBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingVertical: 13,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 8,
+  },
+  fetchBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "Lora_600SemiBold",
+  },
+  fetchForm: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 18,
+    gap: 12,
+  },
+  fetchFormTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    fontFamily: "Lora_700Bold",
+  },
+  fetchFormNote: {
+    fontSize: 13,
+    fontFamily: "Lora_400Regular",
+    lineHeight: 19,
+  },
+  urlInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    gap: 8,
+  },
+  urlInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Lora_400Regular",
+  },
+  fetchFormBtns: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  fetchErrorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  fetchErrorText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Lora_400Regular",
+  },
+  successBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  successText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Lora_500Medium",
   },
 });

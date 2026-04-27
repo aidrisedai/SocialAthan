@@ -47,6 +47,7 @@ export interface Masjid {
   adminIds?: string[];
   timeOverrides?: Partial<Record<Prayer, MasjidTimeOverride>>;
   memberCount: number;
+  website?: string;
 }
 
 export interface Friend {
