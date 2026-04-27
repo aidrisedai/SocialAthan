@@ -115,6 +115,7 @@ interface AppContextValue {
   pendingRSVP: Prayer | null;
   clearPendingRSVP: () => void;
   setPendingRSVP: (prayer: Prayer) => void;
+  coords: { lat: number; lng: number };
 }
 
 const DEFAULT_COORDS = { lat: 40.7128, lng: -74.006 };
@@ -178,7 +179,7 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   },
 };
 
-function buildPrayerTimes(
+export function buildPrayerTimes(
   coords: { lat: number; lng: number },
   method: CalcMethod,
   masjid: Masjid | null,
@@ -529,6 +530,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       pendingRSVP,
       setPendingRSVP,
       clearPendingRSVP,
+      coords,
     }),
     [
       user,
@@ -556,6 +558,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       pendingRSVP,
       setPendingRSVP,
       clearPendingRSVP,
+      coords,
     ]
   );
 

@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useApp, Prayer } from "@/context/AppContext";
+import { useApp, Prayer, buildPrayerTimes } from "@/context/AppContext";
 
 const PRAYER_LABELS: Record<Prayer, string> = {
   fajr: "Fajr",
@@ -24,8 +24,11 @@ const PRAYER_LABELS: Record<Prayer, string> = {
 export default function MasjidDetailScreen() {
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { nearbyMasjids, prayerTimes, primaryMasjid, setPrimaryMasjid } = useApp();
+  const { nearbyMasjids, primaryMasjid, setPrimaryMasjid, coords, calcMethod } = useApp();
   const masjid = nearbyMasjids.find((m) => m.id === id);
+  const prayerTimes = masjid
+    ? buildPrayerTimes(coords, calcMethod, masjid, {})
+    : [];
 
   if (!masjid) return null;
 

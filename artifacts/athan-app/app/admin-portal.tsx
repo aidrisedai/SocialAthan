@@ -54,14 +54,37 @@ export default function AdminPortalScreen() {
 
   const [editedTimes, setEditedTimes] = useState<PrayerTimeMap>(initialTimes());
 
+  const TIME_PATTERN = /^(1[0-2]|0?[1-9]):[0-5][0-9]\s?(AM|PM)$/i;
+
+  function validateTime(val: string) {
+    return val.trim() === "" || TIME_PATTERN.test(val.trim());
+  }
+
   function handleSave() {
     if (!primaryMasjid) return;
+
+    const invalid = PRAYERS.filter(({ prayer }) => {
+      const t = editedTimes[prayer];
+      return !validateTime(t.adhan) || !validateTime(t.iqamah);
+    });
+
+    if (invalid.length > 0) {
+      const names = invalid.map((p) => p.label).join(", ");
+      Alert.alert(
+        "Invalid Format",
+        `Please enter times as "5:22 AM" or "1:30 PM" for: ${names}`
+      );
+      return;
+    }
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const overrides: Partial<Record<Prayer, MasjidTimeOverride>> = {};
     for (const { prayer } of PRAYERS) {
       const t = editedTimes[prayer];
-      if (t.adhan.trim() || t.iqamah.trim()) {
-        overrides[prayer] = { adhan: t.adhan.trim(), iqamah: t.iqamah.trim() };
+      const adhan = t.adhan.trim();
+      const iqamah = t.iqamah.trim();
+      if (adhan || iqamah) {
+        overrides[prayer] = { adhan, iqamah };
       }
     }
     updateMasjidTimes(primaryMasjid.id, overrides);
