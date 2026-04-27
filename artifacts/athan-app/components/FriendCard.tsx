@@ -76,6 +76,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
 
       {showDuas && (
         <View style={[styles.duasRow, { borderTopColor: colors.border }]}>
+          <Text style={[styles.duasLabel, { color: colors.mutedForeground }]}>Quick Reactions</Text>
           {DUAS.map((dua) => (
             <Pressable
               key={dua}
@@ -166,6 +167,14 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     gap: 8,
     borderTopWidth: 1,
+  },
+  duasLabel: {
+    width: "100%",
+    fontSize: 10,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    marginBottom: 2,
   },
   duaChip: {
     paddingHorizontal: 12,

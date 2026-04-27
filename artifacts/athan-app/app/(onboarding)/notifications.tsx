@@ -40,7 +40,9 @@ export default function NotificationsScreen() {
           },
         });
         await setupNotificationChannel();
-      } catch {}
+      } catch (e) {
+        if (__DEV__) console.warn("[onboarding/notifications] permission or channel setup failed:", e);
+      }
     }
     setRequesting(false);
     advance();

@@ -202,6 +202,31 @@ export default function FriendsScreen() {
                 <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
                   Add friends to see them going to prayers
                 </Text>
+
+                {primaryMasjid && prayerTimes.length > 0 && (
+                  <View style={[styles.aggregateCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                    <Text style={[styles.aggregateTitle, { color: colors.foreground }]}>
+                      {primaryMasjid.name}
+                    </Text>
+                    <Text style={[styles.aggregateSub, { color: colors.mutedForeground }]}>Attendance today</Text>
+                    <View style={styles.aggregateRows}>
+                      {prayerTimes.slice(0, 5).map((pt) => {
+                        const DEMO_COUNTS: Record<string, number> = { fajr: 38, dhuhr: 62, jummah: 210, asr: 45, maghrib: 91, isha: 74 };
+                        const count = DEMO_COUNTS[pt.prayer] ?? 30;
+                        return (
+                          <View key={pt.prayer} style={styles.aggregateRow}>
+                            <Text style={[styles.aggregatePrayer, { color: colors.foreground }]}>{pt.label}</Text>
+                            <View style={[styles.aggregatePill, { backgroundColor: colors.highlight }]}>
+                              <Ionicons name="people-outline" size={11} color={colors.primary} />
+                              <Text style={[styles.aggregateCount, { color: colors.primary }]}>{count}</Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                )}
+
                 <View style={styles.emptyActions}>
                   <Pressable
                     onPress={() => router.push("/invite-link")}
@@ -382,6 +407,47 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Inter_500Medium",
     fontWeight: "500",
+  },
+  aggregateCard: {
+    width: "100%",
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    marginTop: 16,
+    gap: 4,
+  },
+  aggregateTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_600SemiBold",
+  },
+  aggregateSub: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    marginBottom: 8,
+  },
+  aggregateRows: {
+    gap: 6,
+  },
+  aggregateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  aggregatePrayer: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+  },
+  aggregatePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  aggregateCount: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
   },
   discoverSection: {
     padding: 16,
