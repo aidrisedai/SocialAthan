@@ -85,7 +85,7 @@ export default function NotificationsScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Ionicons name={f.icon} size={20} color={colors.primary} />
+              <Ionicons name={f.icon} size={24} color={colors.primary} />
               <Text style={[styles.featureText, { color: colors.foreground }]}>{f.text}</Text>
             </View>
           ))}

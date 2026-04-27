@@ -108,16 +108,16 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
                   styles.completedBadge,
                   {
                     backgroundColor: isNext
-                      ? "rgba(255,255,255,0.15)"
-                      : colors.secondary,
+                      ? "rgba(255,255,255,0.2)"
+                      : colors.highlight,
                   },
                 ]}
               >
                 <Ionicons
                   name="checkmark"
-                  size={14}
+                  size={20}
                   color={
-                    isNext ? colors.primaryForeground : colors.mutedForeground
+                    isNext ? colors.primaryForeground : colors.primary
                   }
                 />
               </View>
@@ -130,7 +130,7 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
               >
                 <Ionicons
                   name={RSVP_ICONS[item.rsvp]}
-                  size={14}
+                  size={18}
                   color="#FFFFFF"
                 />
                 <Text style={styles.rsvpText}>{RSVP_LABELS[item.rsvp]}</Text>
@@ -263,9 +263,9 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
   },
   completedBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },

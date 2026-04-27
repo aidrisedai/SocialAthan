@@ -46,7 +46,7 @@ export default function WelcomeScreen() {
           {FEATURES.map((f) => (
             <View key={f.icon} style={styles.featureRow}>
               <View style={[styles.featureIcon, { backgroundColor: colors.highlight }]}>
-                <Ionicons name={f.icon} size={18} color={colors.primary} />
+                <Ionicons name={f.icon} size={24} color={colors.primary} />
               </View>
               <Text style={[styles.featureText, { color: colors.foreground }]}>{f.text}</Text>
             </View>
@@ -106,9 +106,9 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   featureIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
   },

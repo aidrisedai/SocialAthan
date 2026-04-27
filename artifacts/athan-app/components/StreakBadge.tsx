@@ -28,7 +28,7 @@ export function StreakBadge({ streak, compact }: Props) {
         <Text style={[styles.compactCount, { color: isActive ? colors.primary : colors.mutedForeground }]}>
           {streak.count}
         </Text>
-        <Ionicons name="flame" size={12} color={isActive ? colors.streak : colors.mutedForeground} />
+        <Ionicons name="flame" size={16} color={isActive ? colors.streak : colors.mutedForeground} />
       </View>
     );
   }
