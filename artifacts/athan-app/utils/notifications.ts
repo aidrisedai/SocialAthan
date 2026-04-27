@@ -1,6 +1,14 @@
 import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 import type { PrayerTime, NotificationSettings } from "@/context/AppContext";
+
+function notificationsSupported(): boolean {
+  if (Platform.OS === "web") return false;
+  const env = (Constants.executionEnvironment ?? "") as string;
+  const isExpoGo = env === "storeClient";
+  return !isExpoGo;
+}
 
 const ADHAN_CHANNEL_ID = "adhan-call";
 const IQAMAH_CHANNEL_ID = "iqamah-reminder";
@@ -11,6 +19,7 @@ const IQAMAH_CATEGORY = "IQAMAH";
 const RSVP_CATEGORY = "RSVP_PROMPT";
 
 export async function setupNotificationChannel(): Promise<void> {
+  if (!notificationsSupported()) return;
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync(ADHAN_CHANNEL_ID, {
       name: "Adhan Call",
@@ -73,7 +82,7 @@ export async function scheduleNudgeNotification(
   friendName: string,
   settings: NotificationSettings
 ): Promise<void> {
-  if (Platform.OS === "web") return;
+  if (!notificationsSupported()) return;
   if (!settings.masterEnabled || !settings.nudges) return;
   try {
     await Notifications.scheduleNotificationAsync({
@@ -98,7 +107,7 @@ export async function scheduleStreakReminderNotification(
   settings: NotificationSettings,
   ishaTime: string
 ): Promise<void> {
-  if (Platform.OS === "web") return;
+  if (!notificationsSupported()) return;
   if (!settings.masterEnabled || !settings.streakReminders) return;
   const ishaDate = parseTimeToDate(ishaTime);
   if (!ishaDate) return;
@@ -131,7 +140,7 @@ export async function scheduleAllPrayerNotifications(
   prayerTimes: PrayerTime[],
   settings: NotificationSettings
 ): Promise<void> {
-  if (Platform.OS === "web") return;
+  if (!notificationsSupported()) return;
 
   await Notifications.cancelAllScheduledNotificationsAsync();
 
