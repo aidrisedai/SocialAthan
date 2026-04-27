@@ -23,6 +23,7 @@ export default function MasjidSelectScreen() {
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [localList, setLocalList] = useState<Masjid[] | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const displayList = localList ?? nearbyMasjids;
   const filtered = displayList.filter(
@@ -43,17 +44,23 @@ export default function MasjidSelectScreen() {
 
   async function handleRefresh() {
     setRefreshing(true);
+    setFetchError(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
+        setFetchError("Location permission denied. Please enable it in Settings.");
         setRefreshing(false);
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
       const results = await searchNearbyMasjids(loc.coords.latitude, loc.coords.longitude);
       setLocalList(results);
+      if (results.length === 0) {
+        setFetchError("No masjids found within 10 km. Try a wider area.");
+      }
     } catch (e) {
+      setFetchError("Could not fetch masjids. Check your internet connection and try again.");
       if (__DEV__) console.warn("[masjid-select] refresh failed:", e);
     }
     setRefreshing(false);
@@ -85,6 +92,13 @@ export default function MasjidSelectScreen() {
           onChangeText={setQuery}
         />
       </View>
+
+      {fetchError && (
+        <View style={[styles.errorBanner, { backgroundColor: "#3A1A1A", borderColor: "#FF453A" }]}>
+          <Ionicons name="alert-circle-outline" size={16} color="#FF453A" />
+          <Text style={[styles.errorText, { color: "#FF453A" }]}>{fetchError}</Text>
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {filtered.length === 0 ? (
@@ -291,5 +305,22 @@ const styles = StyleSheet.create({
   refreshBtnText: {
     fontSize: 15,
     fontFamily: "Lora_600SemiBold",
+  },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Lora_400Regular",
+    lineHeight: 18,
   },
 });

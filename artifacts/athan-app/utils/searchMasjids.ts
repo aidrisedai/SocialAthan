@@ -9,6 +9,12 @@ interface OverpassElement {
   tags?: Record<string, string | undefined>;
 }
 
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://lz4.overpass-api.de/api/interpreter",
+  "https://z.overpass-api.de/api/interpreter",
+];
+
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -21,33 +27,48 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+async function fetchFromEndpoint(endpoint: string, query: string): Promise<OverpassElement[]> {
+  const url = `${endpoint}?data=${encodeURIComponent(query)}`;
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`Overpass ${new URL(endpoint).hostname} returned ${response.status}`);
+  }
+  const json = await response.json();
+  return json.elements ?? [];
+}
+
 export async function searchNearbyMasjids(
   lat: number,
   lng: number,
   radiusMeters = 10000
 ): Promise<Masjid[]> {
-  const query = `
-[out:json][timeout:15];
-(
-  node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});
-  way["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});
-  relation["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});
-);
-out center 40;
-`;
+  const query = [
+    `[out:json][timeout:25];`,
+    `(`,
+    `  node["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});`,
+    `  way["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});`,
+    `  relation["amenity"="place_of_worship"]["religion"="muslim"](around:${radiusMeters},${lat},${lng});`,
+    `);`,
+    `out center 50;`,
+  ].join("\n");
 
-  const response = await fetch("https://overpass-api.de/api/interpreter", {
-    method: "POST",
-    body: `data=${encodeURIComponent(query)}`,
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  });
+  let lastError: Error | null = null;
+  let elements: OverpassElement[] = [];
 
-  if (!response.ok) {
-    throw new Error(`Overpass API returned ${response.status}`);
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      elements = await fetchFromEndpoint(endpoint, query);
+      lastError = null;
+      break;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (__DEV__) console.warn(`[searchMasjids] ${lastError.message}, trying next…`);
+    }
   }
 
-  const json = await response.json();
-  const elements: OverpassElement[] = json.elements ?? [];
+  if (lastError) throw lastError;
 
   const seen = new Set<string>();
   const results: Masjid[] = [];
