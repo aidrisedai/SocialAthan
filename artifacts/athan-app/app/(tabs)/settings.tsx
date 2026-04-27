@@ -17,7 +17,7 @@ import { useApp } from "@/context/AppContext";
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, notificationSettings, primaryMasjid, calcMethod } = useApp();
+  const { user, notificationSettings, primaryMasjid, calcMethod, occasionalMasjids, removeOccasionalMasjid } = useApp();
 
   const CALC_LABELS: Record<string, string> = {
     isna: "ISNA",
@@ -96,6 +96,31 @@ export default function SettingsScreen() {
           </Pressable>
         )}
 
+        {occasionalMasjids.length > 0 && (
+          <>
+            <Text style={[styles.sectionSubLabel, { color: colors.mutedForeground }]}>Occasional Masjids</Text>
+            {occasionalMasjids.map((m) => (
+              <View
+                key={m.id}
+                style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
+              >
+                <Ionicons name="bookmark-outline" size={20} color={colors.primary} />
+                <View style={styles.rowText}>
+                  <Text style={[styles.rowLabel, { color: colors.foreground }]} numberOfLines={1}>{m.name}</Text>
+                  <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{m.address}</Text>
+                </View>
+                <Pressable
+                  onPress={() => removeOccasionalMasjid(m.id)}
+                  hitSlop={12}
+                  accessibilityLabel={`Remove ${m.name} from occasional masjids`}
+                >
+                  <Ionicons name="close-circle-outline" size={22} color={colors.mutedForeground} />
+                </Pressable>
+              </View>
+            ))}
+          </>
+        )}
+
         <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Notifications</Text>
         <Pressable
           onPress={() => router.push("/notification-settings")}
@@ -171,6 +196,15 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     textTransform: "uppercase",
     letterSpacing: 0.8,
+  },
+  sectionSubLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   profileCard: {
     flexDirection: "row",

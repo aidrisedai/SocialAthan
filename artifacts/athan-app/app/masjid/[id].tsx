@@ -24,7 +24,10 @@ const PRAYER_LABELS: Record<Prayer, string> = {
 export default function MasjidDetailScreen() {
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { nearbyMasjids, primaryMasjid, setPrimaryMasjid, coords, calcMethod } = useApp();
+  const {
+    nearbyMasjids, primaryMasjid, setPrimaryMasjid, coords, calcMethod,
+    occasionalMasjids, addOccasionalMasjid, removeOccasionalMasjid,
+  } = useApp();
   const masjid = nearbyMasjids.find((m) => m.id === id);
   const prayerTimes = masjid
     ? buildPrayerTimes(coords, calcMethod, masjid, {})
@@ -33,6 +36,7 @@ export default function MasjidDetailScreen() {
   if (!masjid) return null;
 
   const isPrimary = primaryMasjid?.id === masjid.id;
+  const isOccasional = occasionalMasjids.some((m) => m.id === masjid.id);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -133,6 +137,25 @@ export default function MasjidDetailScreen() {
           >
             <Text style={[styles.setPrimaryText, { color: colors.primaryForeground }]}>
               Set as Primary Masjid
+            </Text>
+          </Pressable>
+        )}
+
+        {!isPrimary && (
+          <Pressable
+            onPress={() => isOccasional ? removeOccasionalMasjid(masjid.id) : addOccasionalMasjid(masjid.id)}
+            style={[
+              styles.occasionalBtn,
+              { backgroundColor: isOccasional ? colors.secondary : colors.highlight, borderColor: colors.border },
+            ]}
+          >
+            <Ionicons
+              name={isOccasional ? "bookmark" : "bookmark-outline"}
+              size={18}
+              color={colors.primary}
+            />
+            <Text style={[styles.occasionalText, { color: colors.primary }]}>
+              {isOccasional ? "Remove from Occasional Masjids" : "Add as Occasional Masjid"}
             </Text>
           </Pressable>
         )}
@@ -302,6 +325,22 @@ const styles = StyleSheet.create({
   },
   setPrimaryText: {
     fontSize: 16,
+    fontWeight: "600",
+    fontFamily: "Inter_600SemiBold",
+  },
+  occasionalBtn: {
+    margin: 16,
+    marginTop: 0,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  occasionalText: {
+    fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },

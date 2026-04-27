@@ -117,6 +117,9 @@ interface AppContextValue {
   clearPendingRSVP: () => void;
   setPendingRSVP: (prayer: Prayer) => void;
   coords: { lat: number; lng: number };
+  occasionalMasjids: Masjid[];
+  addOccasionalMasjid: (masjidId: string) => void;
+  removeOccasionalMasjid: (masjidId: string) => void;
 }
 
 const DEFAULT_COORDS = { lat: 40.7128, lng: -74.006 };
@@ -505,6 +508,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addOccasionalMasjid = useCallback((masjidId: string) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      if (prev.occasionalMasjidIds.includes(masjidId)) return prev;
+      const updated = { ...prev, occasionalMasjidIds: [...prev.occasionalMasjidIds, masjidId] };
+      AsyncStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const removeOccasionalMasjid = useCallback((masjidId: string) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, occasionalMasjidIds: prev.occasionalMasjidIds.filter((id) => id !== masjidId) };
+      AsyncStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  const occasionalMasjids = useMemo(
+    () => (user?.occasionalMasjidIds ?? []).map((id) => masjidList.find((m) => m.id === id)).filter(Boolean) as Masjid[],
+    [user?.occasionalMasjidIds, masjidList]
+  );
+
   const setPendingRSVP = useCallback((prayer: Prayer) => {
     setPendingRSVPState(prayer);
   }, []);
@@ -572,6 +599,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setPendingRSVP,
       clearPendingRSVP,
       coords,
+      occasionalMasjids,
+      addOccasionalMasjid,
+      removeOccasionalMasjid,
     }),
     [
       user,
@@ -600,6 +630,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setPendingRSVP,
       clearPendingRSVP,
       coords,
+      occasionalMasjids,
+      addOccasionalMasjid,
+      removeOccasionalMasjid,
     ]
   );
 
