@@ -69,6 +69,64 @@ function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60_000);
 }
 
+export async function scheduleNudgeNotification(
+  friendName: string,
+  settings: NotificationSettings
+): Promise<void> {
+  if (Platform.OS === "web") return;
+  if (!settings.masterEnabled || !settings.nudges) return;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Nudge sent",
+        body: `You nudged ${friendName} to join prayer today`,
+        sound: false,
+        data: { type: "nudge" },
+        ...(Platform.OS === "ios"
+          ? { interruptionLevel: "passive" as const }
+          : { channelId: SOCIAL_CHANNEL_ID }),
+      },
+      trigger: null,
+    });
+  } catch (e) {
+    if (__DEV__) console.warn("[notifications] nudge notification failed:", e);
+  }
+}
+
+export async function scheduleStreakReminderNotification(
+  streakDays: number,
+  settings: NotificationSettings,
+  ishaTime: string
+): Promise<void> {
+  if (Platform.OS === "web") return;
+  if (!settings.masterEnabled || !settings.streakReminders) return;
+  const ishaDate = parseTimeToDate(ishaTime);
+  if (!ishaDate) return;
+  const reminderDate = addMinutes(ishaDate, 15);
+  if (reminderDate <= new Date()) return;
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: streakDays > 0 ? `${streakDays}-prayer streak 🔥` : "Keep your streak going",
+        body: streakDays > 0
+          ? "You're on a roll — don't miss Isha to extend your streak"
+          : "Head to the masjid for Isha to start a new streak",
+        sound: false,
+        data: { type: "streak_reminder" },
+        ...(Platform.OS === "ios"
+          ? { interruptionLevel: "passive" as const }
+          : { channelId: SOCIAL_CHANNEL_ID }),
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: reminderDate,
+      },
+    });
+  } catch (e) {
+    if (__DEV__) console.warn("[notifications] streak reminder failed:", e);
+  }
+}
+
 export async function scheduleAllPrayerNotifications(
   prayerTimes: PrayerTime[],
   settings: NotificationSettings
@@ -94,9 +152,9 @@ export async function scheduleAllPrayerNotifications(
           content: {
             title: `${prayer.label} · Adhan`,
             body: "It's time for prayer",
-            sound: true,
+            sound: Platform.OS === "ios" ? `adhan_${settings.adhanReciter}.mp3` : true,
             categoryIdentifier: ADHAN_CATEGORY,
-            data: { prayer: prayer.prayer, type: "adhan" },
+            data: { prayer: prayer.prayer, type: "adhan", reciter: settings.adhanReciter },
             ...(Platform.OS === "ios"
               ? { interruptionLevel: "critical" as const }
               : { channelId: ADHAN_CHANNEL_ID, priority: "max" }),

@@ -18,6 +18,7 @@ import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp, Friend } from "@/context/AppContext";
 import { FriendCard } from "@/components/FriendCard";
+import { scheduleNudgeNotification } from "@/utils/notifications";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -40,7 +41,7 @@ const DISCOVER_ITEMS: DiscoverItem[] = [
 export default function FriendsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { friends, friendRSVPs, primaryMasjid, prayerTimes, addFriend, sendMessage } = useApp();
+  const { friends, friendRSVPs, primaryMasjid, prayerTimes, addFriend, sendMessage, notificationSettings } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>("Going Now");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -66,6 +67,9 @@ export default function FriendsScreen() {
 
   function handleNudge(friend: Friend) {
     sendMessage(`dm_${friend.id}`, "🕌 Nudge — joining for prayer today?");
+    scheduleNudgeNotification(friend.name, notificationSettings).catch((e) => {
+      if (__DEV__) console.warn("[friends] nudge notification dispatch failed:", e);
+    });
     Alert.alert("Nudge sent!", `A message was sent to ${friend.name}.`);
   }
 

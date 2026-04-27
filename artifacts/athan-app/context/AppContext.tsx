@@ -12,7 +12,7 @@ import React, {
 import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
 import { CalcMethod, computePrayerTimes, formatIqamah } from "@/utils/prayerTimes";
-import { scheduleAllPrayerNotifications, setupNotificationChannel } from "@/utils/notifications";
+import { scheduleAllPrayerNotifications, scheduleStreakReminderNotification, setupNotificationChannel } from "@/utils/notifications";
 
 export type Prayer = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha" | "jummah";
 
@@ -373,7 +373,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     scheduleAllPrayerNotifications(prayerTimes, notificationSettings).catch((e) => {
       if (__DEV__) console.warn("[AppContext] Notification scheduling failed:", e);
     });
-  }, [prayerTimes, notificationSettings]);
+    const ishaEntry = prayerTimes.find((p) => p.prayer === "isha");
+    if (ishaEntry) {
+      const currentStreak = streaks.reduce((max, s) => Math.max(max, s.count), 0);
+      scheduleStreakReminderNotification(currentStreak, notificationSettings, ishaEntry.adhan).catch((e) => {
+        if (__DEV__) console.warn("[AppContext] Streak reminder scheduling failed:", e);
+      });
+    }
+  }, [prayerTimes, notificationSettings, streaks]);
 
   useEffect(() => {
     const tick = () => {
