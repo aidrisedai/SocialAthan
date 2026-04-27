@@ -62,11 +62,11 @@ export default function ContactSyncScreen() {
         )
       );
 
+      const DEMO_MATCH_IDS = new Set(["c1", "c3", "c5"]);
       const matched = KNOWN_USERS.filter(
         (u) =>
           !existingIds.has(u.id) &&
-          (contactNames.has(u.name.toLowerCase()) ||
-            Math.random() > 0.3)
+          (contactNames.has(u.name.toLowerCase()) || DEMO_MATCH_IDS.has(u.id))
       );
 
       setMatches(matched);
