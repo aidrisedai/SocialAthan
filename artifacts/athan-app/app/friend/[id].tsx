@@ -42,7 +42,7 @@ export default function FriendProfileScreen() {
 
   function handleNudge() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    sendMessage(friendId, "🕌 Nudge — joining for prayer today?");
+    sendMessage(`dm_${friendId}`, "🕌 Nudge — joining for prayer today?");
     Alert.alert("Nudge sent", `A message was sent to ${friendName}.`);
   }
 

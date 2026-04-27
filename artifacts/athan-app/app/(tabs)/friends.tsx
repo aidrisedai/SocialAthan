@@ -65,12 +65,16 @@ export default function FriendsScreen() {
   }
 
   function handleNudge(friend: Friend) {
-    sendMessage(friend.id, "🕌 Nudge — joining for prayer today?");
+    sendMessage(`dm_${friend.id}`, "🕌 Nudge — joining for prayer today?");
     Alert.alert("Nudge sent!", `A message was sent to ${friend.name}.`);
   }
 
   function handleMessage(friend: Friend) {
     router.push({ pathname: "/chat/[id]", params: { id: friend.id } });
+  }
+
+  function handleDua(friend: Friend, dua: string) {
+    sendMessage(`dm_${friend.id}`, dua);
   }
 
   function handleAddFriend() {
@@ -179,6 +183,7 @@ export default function FriendsScreen() {
                   onViewProfile={handleViewProfile}
                   onNudge={handleNudge}
                   onMessage={handleMessage}
+                  onDua={handleDua}
                 />
               ))
             )}

@@ -41,6 +41,8 @@ function NotificationHandler() {
       } else if (actionId === "maybe") {
         updateRSVP(prayer, "maybe" as RSVPStatus);
         router.navigate("/(tabs)");
+      } else if (actionId === "dismiss") {
+        updateRSVP(prayer, "cant" as RSVPStatus);
       } else {
         setPendingRSVP(prayer);
         router.navigate("/(tabs)");

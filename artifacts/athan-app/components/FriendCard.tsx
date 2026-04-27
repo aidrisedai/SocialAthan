@@ -17,9 +17,10 @@ interface Props {
   onViewProfile?: (friend: Friend) => void;
   onNudge?: (friend: Friend) => void;
   onMessage?: (friend: Friend) => void;
+  onDua?: (friend: Friend, dua: string) => void;
 }
 
-export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNudge, onMessage }: Props) {
+export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNudge, onMessage, onDua }: Props) {
   const colors = useColors();
 
   return (
@@ -78,7 +79,10 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
           {DUAS.map((dua) => (
             <Pressable
               key={dua}
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onDua?.(friend, dua);
+              }}
               style={[styles.duaChip, { backgroundColor: colors.secondary }]}
             >
               <Text style={[styles.duaText, { color: colors.foreground }]}>{dua}</Text>
