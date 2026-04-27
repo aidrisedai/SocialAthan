@@ -21,7 +21,9 @@ export default function LocationScreen() {
     if (Platform.OS !== "web") {
       try {
         await Location.requestForegroundPermissionsAsync();
-      } catch {}
+      } catch (e) {
+        if (__DEV__) console.warn("[onboarding/location] permission request failed:", e);
+      }
     }
     setRequesting(false);
     router.push("/(onboarding)/masjid");

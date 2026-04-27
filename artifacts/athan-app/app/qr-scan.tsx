@@ -32,7 +32,8 @@ const expoCamera =
               () => Promise<{ granted: boolean }>
             ];
           };
-        } catch {
+        } catch (e) {
+          if (__DEV__) console.warn("[qr-scan] expo-camera unavailable, falling back to unavailable UI:", e);
           return null;
         }
       })()
