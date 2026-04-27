@@ -79,12 +79,17 @@ export default function AdminPortalScreen() {
 
   async function handleFetchTimes() {
     const url = websiteUrl.trim();
-    if (!url) return;
+    if (!url && !targetMasjid) return;
     setIsFetching(true);
     setFetchError(null);
     setFetchSuccess(false);
     try {
-      const { overrides } = await api.masjids.fetchTimes(url);
+      const { overrides } = await api.masjids.fetchTimes({
+        url: url || undefined,
+        lat: targetMasjid?.lat,
+        lng: targetMasjid?.lng,
+        method: calcMethod,
+      });
       const filled: Partial<PrayerTimeMap> = {};
       let count = 0;
       for (const prayer of ["fajr", "dhuhr", "asr", "maghrib", "isha", "jummah"] as Prayer[]) {

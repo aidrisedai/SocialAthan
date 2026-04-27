@@ -267,6 +267,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const wsRef = useRef<WebSocket | null>(null);
   const wsRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoFetchedRef = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     setApiBaseUrl(getApiBaseUrl());
@@ -561,6 +562,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const computed = buildPrayerTimes(coords, calcMethod, masjid ?? null, prayerRsvps);
     setPrayerTimes(computed);
   }, [coords, calcMethod, primaryMasjid, masjidList, prayerRsvps, isLoading, currentDate]);
+
+  useEffect(() => {
+    if (isLoading || !primaryMasjid) return;
+    const masjid = masjidList.find((m) => m.id === primaryMasjid.id) ?? primaryMasjid;
+    const hasCoords = typeof masjid.lat === "number" && typeof masjid.lng === "number";
+    if (!hasCoords && !masjid.website) return;
+
+    const today = todayIso();
+    const lastFetched = autoFetchedRef.current.get(masjid.id);
+    if (lastFetched === today) return;
+    autoFetchedRef.current.set(masjid.id, today);
+
+    api.masjids
+      .fetchTimes({
+        url: masjid.website || undefined,
+        lat: masjid.lat,
+        lng: masjid.lng,
+        method: calcMethod,
+      })
+      .then(({ overrides }) => {
+        const prayers = Object.keys(overrides) as Prayer[];
+        if (prayers.length === 0) return;
+        const typed: Partial<Record<Prayer, MasjidTimeOverride>> = {};
+        for (const p of prayers) {
+          const v = overrides[p];
+          if (v) typed[p] = { adhan: v.adhan, iqamah: v.iqamah };
+        }
+        setMasjidList((prev) => {
+          const updated = prev.map((m) =>
+            m.id === masjid.id
+              ? { ...m, timeOverrides: { ...m.timeOverrides, ...typed } }
+              : m
+          );
+          AsyncStorage.setItem("masjidList", JSON.stringify(updated));
+          return updated;
+        });
+        setPrimaryMasjidState((prev) =>
+          prev?.id === masjid.id
+            ? { ...prev, timeOverrides: { ...prev.timeOverrides, ...typed } }
+            : prev
+        );
+      })
+      .catch(() => {});
+  }, [primaryMasjid?.id, calcMethod, isLoading]);
 
   useEffect(() => {
     if (Platform.OS === "web" || prayerTimes.length === 0) return;
