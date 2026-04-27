@@ -3,6 +3,8 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Pressable,
   SafeAreaView,
   StyleSheet,
@@ -12,32 +14,66 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
+import { api, saveAuthCredentials } from "@/context/api";
 
 function generateUsername() {
-  const adjectives = ["blessed", "thankful", "sincere", "humble", "faithful"];
+  const adjectives = ["blessed", "thankful", "sincere", "humble", "faithful", "devoted", "patient", "generous"];
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const num = Math.floor(1000 + Math.random() * 9000);
+  const num = Math.floor(10000 + Math.random() * 89999);
   return `${adj}${num}`;
 }
 
 export default function ProfileScreen() {
   const colors = useColors();
-  const { updateUser } = useApp();
+  const { updateUser, onRegistered } = useApp();
   const [name, setName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
   const defaultUsername = useMemo(() => generateUsername(), []);
 
-  function handleContinue() {
+  async function handleContinue() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    updateUser({
-      id: "user1",
-      name: name.trim() || "New User",
-      username: defaultUsername,
-      primaryMasjidId: null,
-      occasionalMasjidIds: [],
-      isAdmin: false,
-      adminMasjidIds: [],
-    });
-    router.push("/(onboarding)/calculation");
+    const displayName = name.trim() || "New User";
+    const code = inviteCode.trim();
+
+    if (!code) {
+      Alert.alert("Invite Code Required", "Please enter your invite code to continue.");
+      return;
+    }
+
+    setIsRegistering(true);
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const username = attempt === 0 ? defaultUsername : generateUsername();
+      try {
+        const res = await api.auth.register(displayName, username, code);
+        await saveAuthCredentials(res.authToken, res.user.id);
+        updateUser({
+          id: res.user.id,
+          name: res.user.name,
+          username: res.user.username,
+          primaryMasjidId: null,
+          occasionalMasjidIds: [],
+          isAdmin: false,
+          adminMasjidIds: [],
+        });
+        onRegistered(res.authToken);
+        setIsRegistering(false);
+        router.push("/(onboarding)/calculation");
+        return;
+      } catch (e: unknown) {
+        const err = e instanceof Error ? e : new Error("Registration failed");
+        if (err.message === "Username already taken") {
+          lastError = err;
+          continue;
+        }
+        setIsRegistering(false);
+        Alert.alert("Could Not Register", err.message || "Registration failed. Please try again.", [{ text: "OK" }]);
+        return;
+      }
+    }
+    setIsRegistering(false);
+    Alert.alert("Could Not Register", lastError?.message ?? "Registration failed. Please try again.", [{ text: "OK" }]);
   }
 
   return (
@@ -57,7 +93,7 @@ export default function ProfileScreen() {
             What should we call you?
           </Text>
           <Text style={[styles.body, { color: colors.mutedForeground }]}>
-            Optional — you can set a name or skip for now.
+            Enter your invite code and an optional display name to get started.
           </Text>
         </View>
 
@@ -70,7 +106,23 @@ export default function ProfileScreen() {
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
+            returnKeyType="next"
+            editable={!isRegistering}
+          />
+        </View>
+
+        <View style={[styles.inputContainer, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <Ionicons name="key-outline" size={20} color={colors.mutedForeground} />
+          <TextInput
+            style={[styles.input, { color: colors.foreground }]}
+            placeholder="Invite code (required)"
+            placeholderTextColor={colors.mutedForeground}
+            value={inviteCode}
+            onChangeText={setInviteCode}
+            autoCapitalize="none"
             returnKeyType="done"
+            editable={!isRegistering}
+            onSubmitEditing={handleContinue}
           />
         </View>
 
@@ -86,10 +138,17 @@ export default function ProfileScreen() {
 
         <Pressable
           onPress={handleContinue}
-          style={[styles.ctaBtn, { backgroundColor: colors.foreground }]}
+          disabled={isRegistering}
+          style={[styles.ctaBtn, { backgroundColor: colors.foreground, opacity: isRegistering ? 0.7 : 1 }]}
         >
-          <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>Continue</Text>
-          <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
+          {isRegistering ? (
+            <ActivityIndicator color={colors.primaryForeground} />
+          ) : (
+            <>
+              <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>Continue</Text>
+              <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
+            </>
+          )}
         </Pressable>
       </View>
     </SafeAreaView>

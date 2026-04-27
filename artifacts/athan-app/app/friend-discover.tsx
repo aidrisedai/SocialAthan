@@ -2,8 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import type { Href } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -15,6 +16,7 @@ import {
 import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp, Friend } from "@/context/AppContext";
+import { api, getAuthToken } from "@/context/api";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -31,35 +33,79 @@ const CONNECT_OPTIONS: ConnectOption[] = [
   { icon: "link-outline", label: "Share Link", sub: "Invite via WhatsApp, SMS, or anywhere", route: "/invite-link" },
 ];
 
-const SUGGESTED_USERS: Friend[] = [
-  { id: "s1", name: "Khalid Rahman", username: "khalid_r", isConnected: false },
-  { id: "s2", name: "Tariq Jamal", username: "tariq.j", isConnected: false },
-  { id: "s3", name: "Bilal Siddiqui", username: "bilal_s", isConnected: false },
-];
+type SearchState = "idle" | "loading" | "found" | "not_found" | "error";
+
+interface SearchResult {
+  id: string;
+  name: string;
+  username: string;
+  isConnected: boolean;
+}
 
 export default function FriendDiscoverScreen() {
   const colors = useColors();
   const { addFriend, friends } = useApp();
   const [query, setQuery] = useState("");
+  const [searchState, setSearchState] = useState<SearchState>("idle");
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    getAuthToken().then((token) => {
+      setIsAuthenticated(!!token);
+    });
+  }, []);
 
   const existingIds = new Set(friends.map((f) => f.id));
 
-  const searched =
-    query.length > 0
-      ? SUGGESTED_USERS.filter(
-          (u) =>
-            !existingIds.has(u.id) &&
-            (u.name.toLowerCase().includes(query.toLowerCase()) ||
-              u.username.toLowerCase().includes(query.toLowerCase()))
-        )
-      : [];
+  const searchByUsername = useCallback(async (username: string) => {
+    const trimmed = username.trim().toLowerCase().replace(/^@/, "");
+    if (!trimmed || trimmed.length < 2) {
+      setSearchState("idle");
+      setSearchResult(null);
+      return;
+    }
+    setSearchState("loading");
+    try {
+      const res = await api.users.byUsername(trimmed);
+      const user = res.user;
+      setSearchResult({
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        isConnected: friends.some((f) => f.id === user.id),
+      });
+      setSearchState("found");
+    } catch {
+      setSearchState("not_found");
+      setSearchResult(null);
+    }
+  }, [friends]);
 
-  function handleAdd(user: Friend) {
+  function handleQueryChange(text: string) {
+    setQuery(text);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!text.trim()) {
+      setSearchState("idle");
+      setSearchResult(null);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      if (isAuthenticated) {
+        searchByUsername(text);
+      }
+    }, 400);
+  }
+
+  function handleAdd(user: SearchResult | Friend) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     addFriend({ ...user, isConnected: true });
     setAddedIds((prev) => new Set([...prev, user.id]));
   }
+
+  const queryIsActive = query.trim().length > 0;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -80,38 +126,62 @@ export default function FriendDiscoverScreen() {
         <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
         <TextInput
           style={[styles.searchInput, { color: colors.foreground }]}
-          placeholder="Search by username..."
+          placeholder="Search by @username..."
           placeholderTextColor={colors.mutedForeground}
           value={query}
-          onChangeText={setQuery}
+          onChangeText={handleQueryChange}
           autoCapitalize="none"
+          autoCorrect={false}
         />
+        {searchState === "loading" && (
+          <ActivityIndicator size="small" color={colors.primary} />
+        )}
+        {query.length > 0 && searchState !== "loading" && (
+          <Pressable onPress={() => { setQuery(""); setSearchState("idle"); setSearchResult(null); }}>
+            <Ionicons name="close-circle" size={18} color={colors.mutedForeground} />
+          </Pressable>
+        )}
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {query.length > 0 && searched.length === 0 && (
+        {queryIsActive && isAuthenticated && (
+          <>
+            {searchState === "found" && searchResult && (
+              <>
+                <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+                  Result
+                </Text>
+                <UserRow
+                  user={searchResult}
+                  added={addedIds.has(searchResult.id) || existingIds.has(searchResult.id)}
+                  onAdd={handleAdd}
+                />
+              </>
+            )}
+            {searchState === "not_found" && (
+              <View style={styles.emptySearch}>
+                <Ionicons name="person-outline" size={40} color={colors.mutedForeground} />
+                <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                  No user found for "{query.replace(/^@/, "")}"
+                </Text>
+                <Text style={[styles.emptyHint, { color: colors.mutedForeground }]}>
+                  Make sure you have the exact username
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+
+        {queryIsActive && !isAuthenticated && (
           <View style={styles.emptySearch}>
+            <Ionicons name="log-in-outline" size={40} color={colors.mutedForeground} />
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              No users found for "{query}"
+              Sign in to search for friends
             </Text>
           </View>
         )}
 
-        {searched.length > 0 && (
-          <>
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Results</Text>
-            {searched.map((user) => (
-              <UserRow
-                key={user.id}
-                user={user}
-                added={addedIds.has(user.id)}
-                onAdd={handleAdd}
-              />
-            ))}
-          </>
-        )}
-
-        {query.length === 0 && (
+        {!queryIsActive && (
           <>
             <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
               Ways to Connect
@@ -140,17 +210,14 @@ export default function FriendDiscoverScreen() {
               </Pressable>
             ))}
 
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
-              People You May Know
-            </Text>
-            {SUGGESTED_USERS.filter((u) => !existingIds.has(u.id)).map((user) => (
-              <UserRow
-                key={user.id}
-                user={user}
-                added={addedIds.has(user.id)}
-                onAdd={handleAdd}
-              />
-            ))}
+            {isAuthenticated && friends.length === 0 && (
+              <View style={styles.emptySearch}>
+                <Ionicons name="people-outline" size={40} color={colors.mutedForeground} />
+                <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                  Search for a friend by their username above
+                </Text>
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -163,9 +230,9 @@ function UserRow({
   added,
   onAdd,
 }: {
-  user: Friend;
+  user: { id: string; name: string; username: string; isConnected: boolean };
   added: boolean;
-  onAdd: (u: Friend) => void;
+  onAdd: (u: { id: string; name: string; username: string; isConnected: boolean }) => void;
 }) {
   const colors = useColors();
   return (
@@ -185,6 +252,7 @@ function UserRow({
       </View>
       <Pressable
         onPress={() => { if (!added) onAdd(user); }}
+        disabled={added}
         style={[
           styles.addBtn,
           { backgroundColor: added ? colors.secondary : colors.primary },
@@ -239,12 +307,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   emptySearch: {
-    paddingTop: 32,
+    paddingTop: 40,
     alignItems: "center",
+    gap: 10,
   },
   emptyText: {
     fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
+  },
+  emptyHint: {
+    fontSize: 12,
     fontFamily: "Inter_400Regular",
+    textAlign: "center",
   },
   discoverCard: {
     flexDirection: "row",

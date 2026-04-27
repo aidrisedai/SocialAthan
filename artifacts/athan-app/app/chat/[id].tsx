@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -19,7 +19,11 @@ import { useApp } from "@/context/AppContext";
 export default function ChatScreen() {
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { friends, messages, sendMessage, user } = useApp();
+  const { friends, messages, sendMessage, loadMessages, user } = useApp();
+
+  useEffect(() => {
+    if (id) loadMessages(id);
+  }, [id]);
   const friend = friends.find((f) => f.id === id);
   const chatId = `dm_${id}`;
   const chatMessages = messages[chatId] ?? [];

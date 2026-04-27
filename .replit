@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -38,3 +38,11 @@ externalPort = 3000
 [[ports]]
 localPort = 19479
 externalPort = 3002
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+ATHAN_INVITE_CODE = "athan2024"

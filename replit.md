@@ -55,7 +55,8 @@ artifacts/athan-app/
 │   ├── calculation-method.tsx   # Prayer calculation method settings
 │   └── adhan-audio.tsx          # Adhan reciter selection
 ├── context/
-│   └── AppContext.tsx           # Full app state (user, RSVPs, friends, streaks, notifications, messages)
+│   ├── AppContext.tsx           # Full app state (user, RSVPs, friends, streaks, notifications, messages)
+│   └── api.ts                  # API client (fetch wrapper, auth token management, typed API methods)
 ├── components/
 │   ├── PrayerCard.tsx           # Prayer time card with RSVP CTA + friend avatars
 │   ├── RSVPSheet.tsx            # Going/Maybe/Can't bottom sheet
@@ -65,8 +66,33 @@ artifacts/athan-app/
     └── colors.ts                # Brand palette
 ```
 
+## Backend Sync Layer (Task 4)
+
+### API Server (`artifacts/api-server/`)
+- Express + Drizzle ORM + PostgreSQL
+- Routes at `/api/auth`, `/api/friends`, `/api/rsvps`, `/api/messages`
+- Bearer token auth (UUID token stored in AsyncStorage)
+- DB tables: `athan_users`, `athan_friendships`, `athan_rsvps`, `athan_messages`
+- Friend RSVPs polled every 30 seconds for near-real-time visibility
+
+### Mobile API Client (`artifacts/athan-app/context/api.ts`)
+- Thin fetch wrapper with base URL + Bearer auth support
+- `setApiBaseUrl()` called from AppContext with `EXPO_PUBLIC_DOMAIN`
+- Graceful fallback to local AsyncStorage if API unavailable
+
+### AppContext Sync Strategy
+- **RSVPs**: Updated locally (immediate) + synced to API in background
+- **Friends**: Fetched from API on startup + synced on add/remove
+- **Messages**: Loaded from API on chat open + sent via API
+- **Friend RSVPs**: Polled from API every 30s, replaces hardcoded sample data when API has real data
+
+### Key Flow: User Registration
+- `app/(onboarding)/profile.tsx` calls `POST /api/auth/register` with name + auto-generated username
+- On success: auth token + user ID stored in AsyncStorage via `saveAuthCredentials()`
+- Fallback: local user created if API fails (graceful degradation)
+
 ## Key Design Decisions
-- **No backend for v1**: All data via AsyncStorage + hardcoded sample data
+- **Backend synced (Task 4)**: Social data (friends, RSVPs, messages) synced to PostgreSQL backend; local settings/streaks/masjids still use AsyncStorage
 - **RSVP visibility**: "Going" RSVPs are visible to friends; "Maybe" and "Can't" are private
 - **Streaks are fully private**: No leaderboards, no public comparisons
 - **Onboarding gated**: `onboardingComplete` flag in AsyncStorage gates the app to onboarding on first launch

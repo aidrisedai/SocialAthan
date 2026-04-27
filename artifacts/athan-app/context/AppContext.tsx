@@ -11,8 +11,10 @@ import React, {
 } from "react";
 import { Alert, Platform } from "react-native";
 import { router } from "expo-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalcMethod, computePrayerTimes, formatIqamah } from "@/utils/prayerTimes";
 import { scheduleAllPrayerNotifications, scheduleStreakReminderNotification, setupNotificationChannel } from "@/utils/notifications";
+import { api, setApiBaseUrl, getAuthToken, saveAuthCredentials } from "./api";
 
 export type Prayer = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha" | "jummah";
 
@@ -111,7 +113,9 @@ interface AppContextValue {
   updateNotificationSettings: (s: Partial<NotificationSettings>) => void;
   messages: Record<string, Message[]>;
   sendMessage: (chatId: string, text: string) => void;
+  loadMessages: (partnerId: string) => Promise<void>;
   updateUser: (updates: Partial<AppUser>) => void;
+  onRegistered: (authToken: string) => void;
   friendRSVPs: Record<string, Partial<Record<Prayer, Friend[]>>>;
   updateMasjidTimes: (masjidId: string, overrides: Partial<Record<Prayer, MasjidTimeOverride>>) => void;
   pendingRSVP: Prayer | null;
@@ -227,7 +231,6 @@ export function buildPrayerTimes(
     }
 
     const iqamah = override?.iqamah ?? formatIqamah(adhan, cp.iqamahOffset);
-
     const adhanTime = new Date(adhanDate);
     const completed = !isNaN(adhanTime.getTime()) && adhanTime < new Date(now.getTime() - 15 * 60_000);
 
@@ -255,7 +258,25 @@ function getDefaultStreaks(): StreakEntry[] {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+function getApiBaseUrl(): string {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (domain) return `https://${domain}`;
+  return "";
+}
+
+function getWsBaseUrl(): string {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  if (domain) return `wss://${domain}`;
+  return "ws://localhost";
+}
+
+function todayIso() {
+  return new Date().toISOString().split("T")[0];
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
   const [primaryMasjid, setPrimaryMasjidState] = useState<Masjid | null>(null);
@@ -266,16 +287,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [calcMethod, setCalcMethodState] = useState<CalcMethod>("isna");
   const [coords, setCoords] = useState<{ lat: number; lng: number }>(DEFAULT_COORDS);
   const [currentDate, setCurrentDate] = useState(() => new Date().toDateString());
-  const [friends, setFriends] = useState<Friend[]>(SAMPLE_FRIENDS);
+  const [localFriends, setLocalFriends] = useState<Friend[]>(SAMPLE_FRIENDS);
   const [streaks, setStreaks] = useState<StreakEntry[]>(getDefaultStreaks());
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [messages, setMessages] = useState<Record<string, Message[]>>(SEED_MESSAGES);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasAuthToken, setHasAuthToken] = useState(false);
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const wsRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setApiBaseUrl(getApiBaseUrl());
+  }, []);
 
   useEffect(() => {
     async function load() {
       try {
-        const [ob, usr, pm, rsvps, fr, st, ns, mthd, ml] = await Promise.all([
+        const [ob, usr, pm, rsvps, fr, st, ns, mthd, ml, token] = await Promise.all([
           AsyncStorage.getItem("onboardingComplete"),
           AsyncStorage.getItem("user"),
           AsyncStorage.getItem("primaryMasjid"),
@@ -285,16 +314,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem("notificationSettings"),
           AsyncStorage.getItem("calcMethod"),
           AsyncStorage.getItem("masjidList"),
+          AsyncStorage.getItem("authToken"),
         ]);
         if (ob === "true") setOnboardingCompleteState(true);
         if (usr) setUser(JSON.parse(usr));
         if (pm) setPrimaryMasjidState(JSON.parse(pm));
         if (rsvps) setPrayerRsvps(JSON.parse(rsvps));
-        if (fr) setFriends(JSON.parse(fr));
+        if (fr) setLocalFriends(JSON.parse(fr));
         if (st) setStreaks(JSON.parse(st));
         if (ns) setNotificationSettings(JSON.parse(ns));
         if (mthd) setCalcMethodState(mthd as CalcMethod);
         if (ml) setMasjidList(JSON.parse(ml));
+        if (token) setHasAuthToken(true);
       } catch (e) {
         if (__DEV__) console.warn("[AppContext] Failed to load persisted state:", e);
       }
@@ -302,6 +333,166 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     load();
   }, []);
+
+  const friendsQuery = useQuery({
+    queryKey: ["friends"],
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) return null;
+      return api.friends.list();
+    },
+    enabled: !isLoading && hasAuthToken,
+    staleTime: 60_000,
+  });
+
+  const rsvpsQuery = useQuery({
+    queryKey: ["rsvps", todayIso()],
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) return null;
+      return api.rsvps.mine();
+    },
+    enabled: !isLoading && hasAuthToken,
+    staleTime: 30_000,
+  });
+
+  const masjidId = primaryMasjid?.id;
+  const friendRsvpsQuery = useQuery({
+    queryKey: ["friendRsvps", masjidId],
+    queryFn: async () => {
+      const token = await getAuthToken();
+      if (!token) return null;
+      return api.rsvps.friends(undefined, masjidId);
+    },
+    enabled: !isLoading && hasAuthToken,
+    refetchInterval: 30_000,
+    staleTime: 25_000,
+  });
+
+  const rsvpMutation = useMutation({
+    mutationFn: async ({ prayer, status }: { prayer: Prayer; status: RSVPStatus }) => {
+      const token = await getAuthToken();
+      if (!token) return;
+      if (status === null) {
+        await api.rsvps.clear(prayer);
+      } else {
+        await api.rsvps.update(prayer, status, masjidId);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["rsvps"] });
+      queryClient.invalidateQueries({ queryKey: ["friendRsvps"] });
+    },
+  });
+
+  const addFriendMutation = useMutation({
+    mutationFn: async (username: string) => {
+      const token = await getAuthToken();
+      if (!token) return null;
+      return api.friends.add(username);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+  });
+
+  const removeFriendMutation = useMutation({
+    mutationFn: async (friendId: string) => {
+      const token = await getAuthToken();
+      if (!token) return;
+      await api.friends.remove(friendId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async ({ partnerId, text }: { partnerId: string; text: string }) => {
+      const token = await getAuthToken();
+      if (!token) return null;
+      return api.messages.send(partnerId, text);
+    },
+  });
+
+  useEffect(() => {
+    if (friendsQuery.isSuccess && friendsQuery.data?.friends) {
+      const apiFriends = friendsQuery.data.friends;
+      setLocalFriends(apiFriends);
+      AsyncStorage.setItem("friends", JSON.stringify(apiFriends));
+    }
+  }, [friendsQuery.isSuccess, friendsQuery.data]);
+
+  useEffect(() => {
+    if (rsvpsQuery.isSuccess && rsvpsQuery.data) {
+      const apiRsvps: Partial<Record<Prayer, RSVPStatus>> = {};
+      for (const [prayer, status] of Object.entries(rsvpsQuery.data.rsvps ?? {})) {
+        apiRsvps[prayer as Prayer] = status as RSVPStatus;
+      }
+      setPrayerRsvps(apiRsvps);
+      AsyncStorage.setItem("prayerRsvps", JSON.stringify(apiRsvps));
+    }
+  }, [rsvpsQuery.isSuccess, rsvpsQuery.data]);
+
+  const connectWebSocket = useCallback((token: string) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+    const wsUrl = `${getWsBaseUrl()}/ws?token=${encodeURIComponent(token)}`;
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      if (__DEV__) console.log("[WS] Connected");
+      if (wsRetryRef.current) {
+        clearTimeout(wsRetryRef.current);
+        wsRetryRef.current = null;
+      }
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data as string);
+        if (data.type === "rsvp_update") {
+          queryClient.invalidateQueries({ queryKey: ["friendRsvps"] });
+        } else if (data.type === "new_message" && data.senderId) {
+          const chatId = `dm_${data.senderId}`;
+          const msg: Message = {
+            id: data.message.id,
+            senderId: data.message.senderId,
+            text: data.message.text,
+            timestamp: data.message.timestamp,
+          };
+          setMessages((prev) => {
+            const existing = prev[chatId] ?? [];
+            if (existing.some((m) => m.id === msg.id)) return prev;
+            return { ...prev, [chatId]: [...existing, msg] };
+          });
+        }
+      } catch (e) {
+        if (__DEV__) console.warn("[WS] Message parse error:", e);
+      }
+    };
+
+    ws.onclose = () => {
+      if (__DEV__) console.log("[WS] Disconnected, reconnecting in 5s");
+      wsRetryRef.current = setTimeout(() => connectWebSocket(token), 5_000);
+    };
+
+    ws.onerror = () => {
+      ws.close();
+    };
+  }, [queryClient]);
+
+  useEffect(() => {
+    if (!hasAuthToken || isLoading) return;
+    getAuthToken().then((token) => {
+      if (token) connectWebSocket(token);
+    });
+    return () => {
+      wsRef.current?.close();
+      if (wsRetryRef.current) clearTimeout(wsRetryRef.current);
+    };
+  }, [hasAuthToken, isLoading, connectWebSocket]);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -368,18 +559,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (Platform.OS === "web" || prayerTimes.length === 0) return;
-    setupNotificationChannel().catch((e) => {
-      if (__DEV__) console.warn("[AppContext] Notification channel setup failed:", e);
-    });
-    scheduleAllPrayerNotifications(prayerTimes, notificationSettings).catch((e) => {
-      if (__DEV__) console.warn("[AppContext] Notification scheduling failed:", e);
-    });
+    setupNotificationChannel().catch(() => {});
+    scheduleAllPrayerNotifications(prayerTimes, notificationSettings).catch(() => {});
     const ishaEntry = prayerTimes.find((p) => p.prayer === "isha");
     if (ishaEntry) {
       const currentStreak = streaks.reduce((max, s) => Math.max(max, s.count), 0);
-      scheduleStreakReminderNotification(currentStreak, notificationSettings, ishaEntry.adhan).catch((e) => {
-        if (__DEV__) console.warn("[AppContext] Streak reminder scheduling failed:", e);
-      });
+      scheduleStreakReminderNotification(currentStreak, notificationSettings, ishaEntry.adhan).catch(() => {});
     }
   }, [prayerTimes, notificationSettings, streaks]);
 
@@ -433,23 +618,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPrayerTimes((prev) =>
       prev.map((p) => (p.prayer === prayer ? { ...p, rsvp: status } : p))
     );
-  }, []);
+    rsvpMutation.mutate({ prayer, status });
+  }, [rsvpMutation]);
 
   const addFriend = useCallback((friend: Friend) => {
-    setFriends((prev) => {
-      const updated = [...prev, friend];
-      AsyncStorage.setItem("friends", JSON.stringify(updated));
-      return updated;
+    if (!hasAuthToken) {
+      setLocalFriends((prev) => {
+        if (prev.some((f) => f.id === friend.id)) return prev;
+        const updated = [...prev, friend];
+        AsyncStorage.setItem("friends", JSON.stringify(updated));
+        return updated;
+      });
+      return;
+    }
+    addFriendMutation.mutate(friend.username, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["friends"] });
+      },
+      onError: (e) => {
+        const msg = e instanceof Error ? e.message : "Could not add friend. Please try again.";
+        Alert.alert("Add Friend Failed", msg);
+      },
     });
-  }, []);
+  }, [hasAuthToken, addFriendMutation, queryClient]);
 
   const removeFriend = useCallback((id: string) => {
-    setFriends((prev) => {
-      const updated = prev.filter((f) => f.id !== id);
-      AsyncStorage.setItem("friends", JSON.stringify(updated));
-      return updated;
+    if (!hasAuthToken) {
+      setLocalFriends((prev) => {
+        const updated = prev.filter((f) => f.id !== id);
+        AsyncStorage.setItem("friends", JSON.stringify(updated));
+        return updated;
+      });
+      return;
+    }
+    removeFriendMutation.mutate(id, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["friends"] });
+      },
     });
-  }, []);
+  }, [hasAuthToken, removeFriendMutation, queryClient]);
 
   const markPrayerAttended = useCallback((prayer: Prayer) => {
     const today = new Date().toDateString();
@@ -488,17 +695,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const sendMessage = useCallback((chatId: string, text: string) => {
-    const msg: Message = {
-      id: `${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+    const localMsg: Message = {
+      id: `local_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
       senderId: user?.id ?? "me",
       text,
       timestamp: Date.now(),
     };
     setMessages((prev) => ({
       ...prev,
-      [chatId]: [...(prev[chatId] ?? []), msg],
+      [chatId]: [...(prev[chatId] ?? []), localMsg],
     }));
-  }, [user]);
+    const partnerId = chatId.startsWith("dm_") ? chatId.slice(3) : chatId;
+    sendMessageMutation.mutate(
+      { partnerId, text },
+      {
+        onSuccess: (data) => {
+          if (!data?.message) return;
+          const serverMsg = data.message;
+          setMessages((prev) => {
+            const existing = prev[chatId] ?? [];
+            const deduped = existing.filter((m) => m.id !== localMsg.id);
+            if (deduped.some((m) => m.id === serverMsg.id)) return prev;
+            return { ...prev, [chatId]: [...deduped, serverMsg] };
+          });
+        },
+      }
+    );
+  }, [user, sendMessageMutation]);
+
+  const loadMessages = useCallback(async (partnerId: string) => {
+    const token = await getAuthToken();
+    if (!token) return;
+    try {
+      const res = await api.messages.get(partnerId);
+      if (res.messages.length > 0) {
+        const chatId = `dm_${partnerId}`;
+        setMessages((prev) => {
+          const existing = (prev[chatId] ?? []).filter((m) => !m.id.startsWith("local_"));
+          const existingIds = new Set(existing.map((m) => m.id));
+          const incoming = res.messages.filter((m) => !existingIds.has(m.id));
+          if (incoming.length === 0) return prev;
+          const merged = [...existing, ...incoming].sort((a, b) => a.timestamp - b.timestamp);
+          return { ...prev, [chatId]: merged };
+        });
+      }
+    } catch (e) {
+      if (__DEV__) console.warn("[AppContext] Load messages failed:", e);
+    }
+  }, []);
 
   const updateUser = useCallback((updates: Partial<AppUser>) => {
     setUser((prev) => {
@@ -518,6 +762,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
   }, []);
+
+  const onRegistered = useCallback((authToken: string) => {
+    setHasAuthToken(true);
+    connectWebSocket(authToken);
+    queryClient.invalidateQueries({ queryKey: ["friends"] });
+    queryClient.invalidateQueries({ queryKey: ["rsvps"] });
+    queryClient.invalidateQueries({ queryKey: ["friendRsvps"] });
+  }, [connectWebSocket, queryClient]);
 
   const addOccasionalMasjid = useCallback((masjidId: string) => {
     setUser((prev) => {
@@ -580,18 +832,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [primaryMasjid]
   );
 
+  const friends = useMemo<Friend[]>(() => {
+    if (hasAuthToken && friendsQuery.isSuccess) {
+      return (friendsQuery.data?.friends ?? []) as Friend[];
+    }
+    return localFriends;
+  }, [hasAuthToken, friendsQuery.isSuccess, friendsQuery.data, localFriends]);
+
   const friendRSVPs = useMemo<Record<string, Partial<Record<Prayer, Friend[]>>>>(() => {
-    return {
-      [primaryMasjid?.id ?? "m1"]: {
-        fajr: [friends[0], friends[1]].filter(Boolean),
-        dhuhr: [friends[0]].filter(Boolean),
-        jummah: [friends[0], friends[1], friends[2]].filter(Boolean),
-        asr: [],
-        maghrib: [friends[1], friends[2]].filter(Boolean),
-        isha: [friends[0]].filter(Boolean),
-      },
-    };
-  }, [primaryMasjid, friends]);
+    const masjidKey = primaryMasjid?.id ?? "m1";
+    if (hasAuthToken && friendRsvpsQuery.isSuccess) {
+      const apiData = (friendRsvpsQuery.data?.friendRsvps ?? {}) as Partial<Record<Prayer, Friend[]>>;
+      return { [masjidKey]: apiData };
+    }
+    if (!hasAuthToken) {
+      return {
+        [masjidKey]: {
+          fajr: [localFriends[0], localFriends[1]].filter(Boolean),
+          dhuhr: [localFriends[0]].filter(Boolean),
+          jummah: [localFriends[0], localFriends[1], localFriends[2]].filter(Boolean),
+          asr: [],
+          maghrib: [localFriends[1], localFriends[2]].filter(Boolean),
+          isha: [localFriends[0]].filter(Boolean),
+        },
+      };
+    }
+    return { [masjidKey]: {} };
+  }, [hasAuthToken, primaryMasjid, localFriends, friendRsvpsQuery.isSuccess, friendRsvpsQuery.data]);
 
   const value = useMemo<AppContextValue>(
     () => ({
@@ -614,7 +881,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateNotificationSettings,
       messages,
       sendMessage,
+      loadMessages,
       updateUser,
+      onRegistered,
       friendRSVPs,
       updateMasjidTimes,
       pendingRSVP,
@@ -646,7 +915,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateNotificationSettings,
       messages,
       sendMessage,
+      loadMessages,
       updateUser,
+      onRegistered,
       friendRSVPs,
       updateMasjidTimes,
       pendingRSVP,
