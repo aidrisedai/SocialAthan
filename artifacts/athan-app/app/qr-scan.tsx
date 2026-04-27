@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Alert,
   Platform,
@@ -16,34 +16,101 @@ import { useApp, Friend } from "@/context/AppContext";
 
 type ViewMode = "show" | "scan";
 
-let CameraView: React.ComponentType<{
-  style?: object;
-  facing?: "front" | "back";
-  barcodeScannerSettings?: { barcodeTypes: string[] };
-  onBarcodeScanned?: (data: { data: string }) => void;
-}> | null = null;
+const expoCamera =
+  Platform.OS !== "web"
+    ? (() => {
+        try {
+          return require("expo-camera") as {
+            CameraView: React.ComponentType<{
+              style?: object;
+              facing?: string;
+              barcodeScannerSettings?: { barcodeTypes: string[] };
+              onBarcodeScanned?: (e: { data: string }) => void;
+            }>;
+            useCameraPermissions: () => [
+              { granted: boolean } | null,
+              () => Promise<{ granted: boolean }>
+            ];
+          };
+        } catch {
+          return null;
+        }
+      })()
+    : null;
 
-let useCameraPermissions: (() => [
-  { granted: boolean } | null,
-  () => Promise<{ granted: boolean }>
-]) | null = null;
+function NativeCameraScanner({ onScanned }: { onScanned: (data: string) => void }) {
+  const colors = useColors();
 
-if (Platform.OS !== "web") {
-  try {
-    const cam = require("expo-camera");
-    CameraView = cam.CameraView;
-    useCameraPermissions = cam.useCameraPermissions;
-  } catch {}
+  if (!expoCamera) {
+    return (
+      <View style={styles.permissionBox}>
+        <Ionicons name="alert-circle-outline" size={52} color={colors.mutedForeground} />
+        <Text style={[styles.permissionText, { color: colors.foreground }]}>
+          Camera Unavailable
+        </Text>
+        <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+          Please use a development build for full camera access.
+        </Text>
+      </View>
+    );
+  }
+
+  const { CameraView, useCameraPermissions } = expoCamera;
+  const [permission, requestPermission] = useCameraPermissions();
+
+  if (!permission?.granted) {
+    return (
+      <View style={styles.permissionBox}>
+        <Ionicons name="camera-outline" size={52} color={colors.mutedForeground} />
+        <Text style={[styles.permissionText, { color: colors.foreground }]}>
+          Camera Access Required
+        </Text>
+        <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+          Allow camera access to scan friend QR codes.
+        </Text>
+        <Pressable
+          onPress={requestPermission}
+          style={[styles.allowBtn, { backgroundColor: colors.primary }]}
+        >
+          <Text style={[styles.allowBtnText, { color: colors.primaryForeground }]}>
+            Allow Camera
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.cameraWrapper}>
+      <CameraView
+        style={styles.camera}
+        facing="back"
+        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+        onBarcodeScanned={({ data }) => onScanned(data)}
+      />
+      <View style={styles.overlay} pointerEvents="none">
+        <View style={[styles.scanCorner, styles.topLeft, { borderColor: colors.primary }]} />
+        <View style={[styles.scanCorner, styles.topRight, { borderColor: colors.primary }]} />
+        <View style={[styles.scanCorner, styles.bottomLeft, { borderColor: colors.primary }]} />
+        <View style={[styles.scanCorner, styles.bottomRight, { borderColor: colors.primary }]} />
+      </View>
+    </View>
+  );
 }
 
-function useCamPermissions() {
-  const [status, setStatus] = useState<{ granted: boolean } | null>(null);
-  async function requestPermission() {
-    const result = { granted: false };
-    if (useCameraPermissions) return result;
-    return result;
-  }
-  return [status, requestPermission] as const;
+function WebUnsupported() {
+  const colors = useColors();
+  return (
+    <View style={styles.permissionBox}>
+      <Ionicons name="qr-code-outline" size={52} color={colors.mutedForeground} />
+      <Text style={[styles.permissionText, { color: colors.foreground }]}>
+        QR Scanning Unavailable
+      </Text>
+      <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
+        Camera QR scanning is available on iOS and Android devices only.
+      </Text>
+    </View>
+  );
 }
 
 export default function QRScanScreen() {
@@ -52,14 +119,8 @@ export default function QRScanScreen() {
   const [view, setView] = useState<ViewMode>("show");
   const [scanned, setScanned] = useState(false);
 
-  const hookResult = useCameraPermissions ? useCameraPermissions() : useCamPermissions();
-  const [permission, requestPermission] = hookResult as [
-    { granted: boolean } | null,
-    () => Promise<{ granted: boolean }>
-  ];
-
   const handleBarcode = useCallback(
-    ({ data }: { data: string }) => {
+    (data: string) => {
       if (scanned) return;
       setScanned(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -91,36 +152,19 @@ export default function QRScanScreen() {
         isConnected: true,
       };
 
-      Alert.alert(
-        "Add Friend",
-        `Add @${username} as a friend?`,
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => setScanned(false),
+      Alert.alert("Add Friend", `Add @${username} as a friend?`, [
+        { text: "Cancel", style: "cancel", onPress: () => setScanned(false) },
+        {
+          text: "Add Friend",
+          onPress: () => {
+            addFriend(newFriend);
+            router.back();
           },
-          {
-            text: "Add Friend",
-            onPress: () => {
-              addFriend(newFriend);
-              router.back();
-            },
-          },
-        ]
-      );
+        },
+      ]);
     },
     [scanned, user, friends, addFriend]
   );
-
-  async function handleSwitchToScan() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (!permission?.granted) {
-      await requestPermission();
-    }
-    setView("scan");
-    setScanned(false);
-  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -137,12 +181,9 @@ export default function QRScanScreen() {
           <Pressable
             key={t}
             onPress={() => {
-              if (t === "scan") {
-                handleSwitchToScan();
-              } else {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setView("show");
-              }
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setView(t);
+              setScanned(false);
             }}
             style={[
               styles.tab,
@@ -163,7 +204,9 @@ export default function QRScanScreen() {
 
       {view === "show" && (
         <View style={styles.codeSection}>
-          <View style={[styles.qrPlaceholder, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={[styles.qrPlaceholder, { backgroundColor: colors.card, borderColor: colors.border }]}
+          >
             <View style={[styles.qrGrid, { borderColor: colors.primary }]}>
               {Array.from({ length: 9 }).map((_, i) => (
                 <View
@@ -194,49 +237,25 @@ export default function QRScanScreen() {
 
       {view === "scan" && (
         <View style={styles.scanSection}>
-          {Platform.OS !== "web" && CameraView && permission?.granted ? (
-            <View style={styles.cameraWrapper}>
-              <CameraView
-                style={styles.camera}
-                facing="back"
-                barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-                onBarcodeScanned={scanned ? undefined : handleBarcode}
-              />
-              <View style={styles.overlay} pointerEvents="none">
-                <View style={[styles.scanCorner, styles.topLeft, { borderColor: colors.primary }]} />
-                <View style={[styles.scanCorner, styles.topRight, { borderColor: colors.primary }]} />
-                <View style={[styles.scanCorner, styles.bottomLeft, { borderColor: colors.primary }]} />
-                <View style={[styles.scanCorner, styles.bottomRight, { borderColor: colors.primary }]} />
-              </View>
-              {scanned && (
-                <Pressable
-                  style={[styles.rescanBtn, { backgroundColor: colors.primary }]}
-                  onPress={() => setScanned(false)}
-                >
-                  <Text style={[styles.rescanText, { color: colors.primaryForeground }]}>
-                    Scan Again
-                  </Text>
-                </Pressable>
-              )}
-            </View>
-          ) : (
+          {scanned ? (
             <View style={styles.permissionBox}>
-              <Ionicons name="camera-outline" size={52} color={colors.mutedForeground} />
+              <Ionicons name="checkmark-circle" size={52} color={colors.primary} />
               <Text style={[styles.permissionText, { color: colors.foreground }]}>
-                Camera Access Required
-              </Text>
-              <Text style={[styles.permissionSub, { color: colors.mutedForeground }]}>
-                Allow camera access to scan QR codes.
+                QR Scanned
               </Text>
               <Pressable
-                onPress={requestPermission}
                 style={[styles.allowBtn, { backgroundColor: colors.primary }]}
+                onPress={() => setScanned(false)}
               >
                 <Text style={[styles.allowBtnText, { color: colors.primaryForeground }]}>
-                  Allow Camera
+                  Scan Another
                 </Text>
               </Pressable>
             </View>
+          ) : Platform.OS === "web" ? (
+            <WebUnsupported />
+          ) : (
+            <NativeCameraScanner onScanned={handleBarcode} />
           )}
         </View>
       )}
@@ -331,12 +350,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     position: "relative",
   },
-  camera: {
-    flex: 1,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  camera: { flex: 1 },
+  overlay: { ...StyleSheet.absoluteFillObject },
   scanCorner: {
     position: "absolute",
     width: 28,
@@ -344,49 +359,24 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   topLeft: {
-    top: 12,
-    left: 12,
-    borderTopWidth: 4,
-    borderLeftWidth: 4,
-    borderColor: "transparent",
-    borderRadius: 4,
+    top: 12, left: 12,
+    borderTopWidth: 4, borderLeftWidth: 4,
+    borderColor: "transparent", borderRadius: 4,
   },
   topRight: {
-    top: 12,
-    right: 12,
-    borderTopWidth: 4,
-    borderRightWidth: 4,
-    borderColor: "transparent",
-    borderRadius: 4,
+    top: 12, right: 12,
+    borderTopWidth: 4, borderRightWidth: 4,
+    borderColor: "transparent", borderRadius: 4,
   },
   bottomLeft: {
-    bottom: 12,
-    left: 12,
-    borderBottomWidth: 4,
-    borderLeftWidth: 4,
-    borderColor: "transparent",
-    borderRadius: 4,
+    bottom: 12, left: 12,
+    borderBottomWidth: 4, borderLeftWidth: 4,
+    borderColor: "transparent", borderRadius: 4,
   },
   bottomRight: {
-    bottom: 12,
-    right: 12,
-    borderBottomWidth: 4,
-    borderRightWidth: 4,
-    borderColor: "transparent",
-    borderRadius: 4,
-  },
-  rescanBtn: {
-    position: "absolute",
-    bottom: 16,
-    alignSelf: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  rescanText: {
-    fontSize: 14,
-    fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    bottom: 12, right: 12,
+    borderBottomWidth: 4, borderRightWidth: 4,
+    borderColor: "transparent", borderRadius: 4,
   },
   permissionBox: {
     alignItems: "center",
