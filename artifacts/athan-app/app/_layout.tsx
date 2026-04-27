@@ -3,9 +3,9 @@ import {
   Lora_500Medium,
   Lora_600SemiBold,
   Lora_700Bold,
-  useFonts,
 } from "@expo-google-fonts/lora";
 import { Feather, Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import * as Notifications from "expo-notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, router } from "expo-router";

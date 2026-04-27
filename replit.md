@@ -99,6 +99,14 @@ artifacts/athan-app/
 - **RSVP modal**: Uses React Native Modal (not Expo Router formSheet) for reliable rendering
 - **Adhan audio**: Bundled WAV tone files in `assets/audio/`; production builds should replace with real adhan recordings
 
+## Masjid Data
+- Real mosque locations sourced from **OpenStreetMap via Overpass API** (free, no API key)
+- `utils/searchMasjids.ts` queries `amenity=place_of_worship` + `religion=muslim` within 10 km
+- AppContext fetches real masjids whenever GPS coords change by ≥ 2 km; results cached in AsyncStorage
+- Onboarding masjid step auto-fetches on mount with loading spinner; shows empty-state message if none found
+- `masjid-select.tsx` has a Refresh button (top-right) to trigger a fresh live search at any time
+- Hardcoded Springfield IL placeholder data removed entirely
+
 ## Audio Architecture
 - 4 WAV files (`adhan_makkah.wav`, `adhan_madinah.wav`, `adhan_mishary.wav`, `adhan_abdulkarim.wav`) bundled in `assets/audio/`
 - `app.json` `expo-notifications` plugin `sounds` array registers them with the native build

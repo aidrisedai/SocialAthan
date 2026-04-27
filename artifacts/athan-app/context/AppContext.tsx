@@ -15,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CalcMethod, computePrayerTimes, formatIqamah } from "@/utils/prayerTimes";
 import { scheduleAllPrayerNotifications, scheduleStreakReminderNotification, setupNotificationChannel } from "@/utils/notifications";
 import { api, setApiBaseUrl, getAuthToken, saveAuthCredentials } from "./api";
+import { searchNearbyMasjids } from "@/utils/searchMasjids";
 
 export type Prayer = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha" | "jummah";
 
@@ -130,38 +131,6 @@ interface AppContextValue {
 
 const DEFAULT_COORDS = { lat: 40.7128, lng: -74.006 };
 
-const NEARBY_MASJIDS: Masjid[] = [
-  {
-    id: "m1",
-    name: "Masjid Al-Noor",
-    address: "123 Oak Street, Springfield, IL",
-    distance: 0.4,
-    lat: 39.781721,
-    lng: -89.650148,
-    claimed: true,
-    memberCount: 247,
-  },
-  {
-    id: "m2",
-    name: "Islamic Center of Springfield",
-    address: "456 Elm Avenue, Springfield, IL",
-    distance: 1.2,
-    lat: 39.790000,
-    lng: -89.642000,
-    claimed: true,
-    memberCount: 512,
-  },
-  {
-    id: "m3",
-    name: "Masjid As-Salam",
-    address: "789 Maple Drive, Springfield, IL",
-    distance: 2.8,
-    lat: 39.771000,
-    lng: -89.655000,
-    claimed: false,
-    memberCount: 89,
-  },
-];
 
 const SAMPLE_FRIENDS: Friend[] = [
   { id: "f1", name: "Ibrahim Hassan", username: "ibrahim.h", isConnected: true },
@@ -280,7 +249,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [onboardingComplete, setOnboardingCompleteState] = useState(false);
   const [user, setUser] = useState<AppUser | null>(null);
   const [primaryMasjid, setPrimaryMasjidState] = useState<Masjid | null>(null);
-  const [masjidList, setMasjidList] = useState<Masjid[]>(NEARBY_MASJIDS);
+  const [masjidList, setMasjidList] = useState<Masjid[]>([]);
+  const lastFetchedCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const [prayerTimes, setPrayerTimes] = useState<PrayerTime[]>([]);
   const [prayerRsvps, setPrayerRsvps] = useState<Partial<Record<Prayer, RSVPStatus>>>({});
   const [pendingRSVP, setPendingRSVPState] = useState<Prayer | null>(null);
@@ -547,6 +517,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setupLocation();
     return () => { sub?.remove(); };
   }, []);
+
+  useEffect(() => {
+    const DEFAULT_LAT = 40.7128;
+    const DEFAULT_LNG = -74.006;
+    const isDefaultCoords =
+      Math.abs(coords.lat - DEFAULT_LAT) < 0.01 &&
+      Math.abs(coords.lng - DEFAULT_LNG) < 0.01;
+    if (isDefaultCoords) return;
+
+    const prev = lastFetchedCoordsRef.current;
+    if (prev) {
+      const dLat = (coords.lat - prev.lat) * (Math.PI / 180);
+      const dLng = (coords.lng - prev.lng) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(prev.lat * (Math.PI / 180)) *
+          Math.cos(coords.lat * (Math.PI / 180)) *
+          Math.sin(dLng / 2) ** 2;
+      const km = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      if (km < 2) return;
+    }
+
+    lastFetchedCoordsRef.current = coords;
+
+    searchNearbyMasjids(coords.lat, coords.lng)
+      .then((results) => {
+        if (results.length === 0) return;
+        setMasjidList(results);
+        AsyncStorage.setItem("masjidList", JSON.stringify(results)).catch(() => {});
+      })
+      .catch((e) => {
+        if (__DEV__) console.warn("[AppContext] Overpass masjid fetch failed:", e);
+      });
+  }, [coords]);
 
   useEffect(() => {
     if (isLoading) return;

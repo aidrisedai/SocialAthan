@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -12,11 +14,37 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { Masjid, useApp } from "@/context/AppContext";
+import { searchNearbyMasjids } from "@/utils/searchMasjids";
 
 export default function MasjidSelectionScreen() {
   const colors = useColors();
   const { nearbyMasjids, setPrimaryMasjid } = useApp();
   const [selected, setSelected] = useState<string | null>(null);
+  const [localList, setLocalList] = useState<Masjid[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const hasFetched = useRef(false);
+
+  const displayList = localList ?? nearbyMasjids;
+
+  useEffect(() => {
+    if (hasFetched.current || displayList.length > 0) return;
+    hasFetched.current = true;
+    setSearching(true);
+    Location.getForegroundPermissionsAsync()
+      .then(({ status }) => {
+        if (status !== "granted") { setSearching(false); return; }
+        return Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      })
+      .then((loc) => {
+        if (!loc) { setSearching(false); return; }
+        return searchNearbyMasjids(loc.coords.latitude, loc.coords.longitude);
+      })
+      .then((results) => {
+        if (results && results.length > 0) setLocalList(results);
+        setSearching(false);
+      })
+      .catch(() => setSearching(false));
+  }, []);
 
   function handleSelect(masjid: Masjid) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -26,7 +54,7 @@ export default function MasjidSelectionScreen() {
   function handleConfirm() {
     if (!selected) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const masjid = nearbyMasjids.find((m) => m.id === selected)!;
+    const masjid = displayList.find((m) => m.id === selected)!;
     setPrimaryMasjid(masjid);
     router.push("/(onboarding)/profile");
   }
@@ -50,7 +78,20 @@ export default function MasjidSelectionScreen() {
       </View>
 
       <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
-        {nearbyMasjids.map((masjid) => {
+        {searching && (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator size="small" color={colors.mutedForeground} />
+            <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>
+              Searching nearby masjids…
+            </Text>
+          </View>
+        )}
+        {!searching && displayList.length === 0 && (
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            No masjids found. Make sure location permission was granted.
+          </Text>
+        )}
+        {displayList.map((masjid) => {
           const isSelected = selected === masjid.id;
           return (
             <Pressable
@@ -181,6 +222,23 @@ const styles = StyleSheet.create({
   members: {
     fontSize: 12,
     fontFamily: "Lora_500Medium",
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 24,
+    justifyContent: "center",
+  },
+  loadingText: {
+    fontSize: 14,
+    fontFamily: "Lora_400Regular",
+  },
+  emptyText: {
+    fontSize: 14,
+    fontFamily: "Lora_400Regular",
+    textAlign: "center",
+    padding: 32,
   },
   footer: {
     padding: 20,

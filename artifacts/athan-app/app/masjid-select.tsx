@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -13,13 +15,17 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { Masjid, useApp } from "@/context/AppContext";
+import { searchNearbyMasjids } from "@/utils/searchMasjids";
 
 export default function MasjidSelectScreen() {
   const colors = useColors();
-  const { nearbyMasjids, primaryMasjid, setPrimaryMasjid } = useApp();
+  const { nearbyMasjids, primaryMasjid, setPrimaryMasjid, coords } = useApp();
   const [query, setQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [localList, setLocalList] = useState<Masjid[] | null>(null);
 
-  const filtered = nearbyMasjids.filter(
+  const displayList = localList ?? nearbyMasjids;
+  const filtered = displayList.filter(
     (m) =>
       m.name.toLowerCase().includes(query.toLowerCase()) ||
       m.address.toLowerCase().includes(query.toLowerCase())
@@ -35,6 +41,24 @@ export default function MasjidSelectScreen() {
     router.push(`/masjid/${masjid.id}`);
   }
 
+  async function handleRefresh() {
+    setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setRefreshing(false);
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      const results = await searchNearbyMasjids(loc.coords.latitude, loc.coords.longitude);
+      setLocalList(results);
+    } catch (e) {
+      if (__DEV__) console.warn("[masjid-select] refresh failed:", e);
+    }
+    setRefreshing(false);
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
@@ -42,7 +66,13 @@ export default function MasjidSelectScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.title, { color: colors.foreground }]}>Select Masjid</Text>
-        <View style={{ width: 24 }} />
+        <Pressable onPress={handleRefresh} disabled={refreshing} hitSlop={8}>
+          {refreshing ? (
+            <ActivityIndicator size="small" color={colors.foreground} />
+          ) : (
+            <Ionicons name="refresh-outline" size={22} color={colors.foreground} />
+          )}
+        </Pressable>
       </View>
 
       <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -57,55 +87,86 @@ export default function MasjidSelectScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Nearby Masjids</Text>
-        {filtered.map((masjid) => {
-          const isSelected = primaryMasjid?.id === masjid.id;
-          return (
+        {filtered.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="location-outline" size={40} color={colors.mutedForeground} />
+            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+              No masjids found nearby
+            </Text>
+            <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
+              Tap the refresh icon above to search for masjids near your current location.
+            </Text>
             <Pressable
-              key={masjid.id}
-              onPress={() => handleSelect(masjid)}
-              style={[
-                styles.masjidCard,
-                {
-                  backgroundColor: isSelected ? colors.highlight : colors.card,
-                  borderColor: isSelected ? colors.primary : colors.border,
-                },
-              ]}
+              onPress={handleRefresh}
+              style={[styles.refreshBtn, { backgroundColor: colors.primary }]}
+              disabled={refreshing}
             >
-              <View style={styles.masjidLeft}>
-                <View style={styles.nameRow}>
-                  <Text style={[styles.masjidName, { color: colors.foreground }]}>{masjid.name}</Text>
-                  {!masjid.claimed && (
-                    <View style={[styles.unclaimedBadge, { backgroundColor: colors.secondary }]}>
-                      <Text style={[styles.unclaimedText, { color: colors.mutedForeground }]}>Unclaimed</Text>
-                    </View>
-                  )}
-                </View>
-                <Text style={[styles.masjidAddress, { color: colors.mutedForeground }]}>
-                  {masjid.address}
+              {refreshing ? (
+                <ActivityIndicator size="small" color={colors.primaryForeground} />
+              ) : (
+                <Text style={[styles.refreshBtnText, { color: colors.primaryForeground }]}>
+                  Find Nearby Masjids
                 </Text>
-                <View style={styles.metaRow}>
-                  {masjid.distance !== undefined && (
-                    <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
-                      {masjid.distance} mi
-                    </Text>
-                  )}
-                  <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
-                    {masjid.memberCount} members
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.rightActions}>
-                {isSelected && (
-                  <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
-                )}
-                <Pressable onPress={() => handleViewDetails(masjid)}>
-                  <Ionicons name="information-circle-outline" size={22} color={colors.mutedForeground} />
-                </Pressable>
-              </View>
+              )}
             </Pressable>
-          );
-        })}
+          </View>
+        ) : (
+          <>
+            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+              {filtered.length} Nearby Masjid{filtered.length !== 1 ? "s" : ""}
+            </Text>
+            {filtered.map((masjid) => {
+              const isSelected = primaryMasjid?.id === masjid.id;
+              return (
+                <Pressable
+                  key={masjid.id}
+                  onPress={() => handleSelect(masjid)}
+                  style={[
+                    styles.masjidCard,
+                    {
+                      backgroundColor: isSelected ? colors.highlight : colors.card,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <View style={styles.masjidLeft}>
+                    <View style={styles.nameRow}>
+                      <Text style={[styles.masjidName, { color: colors.foreground }]}>{masjid.name}</Text>
+                      {!masjid.claimed && (
+                        <View style={[styles.unclaimedBadge, { backgroundColor: colors.secondary }]}>
+                          <Text style={[styles.unclaimedText, { color: colors.mutedForeground }]}>Unclaimed</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.masjidAddress, { color: colors.mutedForeground }]}>
+                      {masjid.address}
+                    </Text>
+                    <View style={styles.metaRow}>
+                      {masjid.distance !== undefined && (
+                        <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                          {masjid.distance} mi
+                        </Text>
+                      )}
+                      {masjid.memberCount > 0 && (
+                        <Text style={[styles.metaText, { color: colors.mutedForeground }]}>
+                          {masjid.memberCount} members
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={styles.rightActions}>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                    )}
+                    <Pressable onPress={() => handleViewDetails(masjid)} hitSlop={8}>
+                      <Ionicons name="information-circle-outline" size={22} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -200,5 +261,35 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingHorizontal: 32,
+    paddingTop: 60,
+    gap: 12,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontFamily: "Lora_600SemiBold",
+    textAlign: "center",
+  },
+  emptyBody: {
+    fontSize: 14,
+    fontFamily: "Lora_400Regular",
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  refreshBtn: {
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 13,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 180,
+  },
+  refreshBtnText: {
+    fontSize: 15,
+    fontFamily: "Lora_600SemiBold",
   },
 });
