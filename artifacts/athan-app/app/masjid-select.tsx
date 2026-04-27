@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as Location from "expo-location";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -19,7 +18,7 @@ import { api } from "@/context/api";
 
 export default function MasjidSelectScreen() {
   const colors = useColors();
-  const { nearbyMasjids, primaryMasjid, setPrimaryMasjid, coords } = useApp();
+  const { nearbyMasjids, primaryMasjid, setPrimaryMasjid, coords, requestLocation } = useApp();
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [localList, setLocalList] = useState<Masjid[] | null>(null);
@@ -47,14 +46,17 @@ export default function MasjidSelectScreen() {
     setFetchError(null);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setFetchError("Location permission denied. Please enable it in Settings.");
-        setRefreshing(false);
-        return;
+      const isDefault =
+        Math.abs(coords.lat - 40.7128) < 0.01 && Math.abs(coords.lng - -74.006) < 0.01;
+      if (isDefault) {
+        const result = await requestLocation();
+        if (result === "denied") {
+          setFetchError("Location permission denied. Please enable it in Settings.");
+          setRefreshing(false);
+          return;
+        }
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-      const { masjids } = await api.masjids.nearby(loc.coords.latitude, loc.coords.longitude);
+      const { masjids } = await api.masjids.nearby(coords.lat, coords.lng);
       const results = masjids as Masjid[];
       setLocalList(results);
       if (results.length === 0) {

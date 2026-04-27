@@ -164,22 +164,29 @@ export default function MasjidDetailScreen() {
         )}
 
         {!isPrimary && (
-          <Pressable
-            onPress={() => isOccasional ? removeOccasionalMasjid(masjid.id) : addOccasionalMasjid(masjid.id)}
-            style={[
-              styles.occasionalBtn,
-              { backgroundColor: isOccasional ? colors.secondary : colors.highlight, borderColor: colors.border },
-            ]}
-          >
-            <Ionicons
-              name={isOccasional ? "bookmark" : "bookmark-outline"}
-              size={18}
-              color={colors.primary}
-            />
-            <Text style={[styles.occasionalText, { color: colors.primary }]}>
-              {isOccasional ? "Remove from Occasional Masjids" : "Add as Occasional Masjid"}
-            </Text>
-          </Pressable>
+          <>
+            <Pressable
+              onPress={() => isOccasional ? removeOccasionalMasjid(masjid.id) : addOccasionalMasjid(masjid.id)}
+              style={[
+                styles.occasionalBtn,
+                { backgroundColor: isOccasional ? colors.secondary : colors.highlight, borderColor: colors.border },
+              ]}
+            >
+              <Ionicons
+                name={isOccasional ? "bookmark" : "bookmark-outline"}
+                size={18}
+                color={colors.primary}
+              />
+              <Text style={[styles.occasionalText, { color: colors.primary }]}>
+                {isOccasional ? "Remove from Occasional Masjids" : "Add as Occasional Masjid"}
+              </Text>
+            </Pressable>
+            {!isOccasional && (
+              <Text style={[styles.occasionalHint, { color: colors.mutedForeground }]}>
+                Use for your work or travel masjid — switch from the home screen.
+              </Text>
+            )}
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -377,6 +384,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+  },
+  occasionalHint: {
+    fontSize: 12,
+    fontFamily: "Lora_400Regular",
+    paddingHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: "center",
   },
   occasionalText: {
     fontSize: 15,

@@ -26,6 +26,16 @@ import { AppProvider, useApp, Prayer, RSVPStatus } from "@/context/AppContext";
 
 SplashScreen.preventAutoHideAsync();
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
 const queryClient = new QueryClient();
 
 function NotificationHandler() {

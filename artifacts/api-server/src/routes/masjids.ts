@@ -313,36 +313,144 @@ async function queryOverpass(query: string): Promise<OverpassElement[]> {
   }
 }
 
-// In-memory cache keyed by rounded lat/lng/radius. 10-minute TTL.
+// In-memory cache keyed by rounded lat/lng/radius.
+// Fresh: 10 min. Stale: extra 30 min (returned immediately while a refresh runs in the background).
 interface CacheEntry {
   expires: number;
+  staleExpires: number;
   payload: object[];
+  lat: number;
+  lng: number;
+  radiusBucket: number;
 }
 const NEARBY_CACHE = new Map<string, CacheEntry>();
-const NEARBY_CACHE_TTL_MS = 10 * 60_000;
+const NEARBY_CACHE_FRESH_MS = 10 * 60_000;
+const NEARBY_CACHE_STALE_MS = 30 * 60_000;
 const NEARBY_CACHE_MAX = 200;
+const NEARBY_NEIGHBOR_KM = 1.0;
+const inFlight = new Map<string, Promise<object[]>>();
 
 function cacheKey(lat: number, lng: number, radius: number): string {
-  // ~250m grid (4dp ≈ 11m, 3dp ≈ 110m, 2dp ≈ 1.1km). Use 2dp + radius bucket so neighbors share a key.
   return `${lat.toFixed(2)}|${lng.toFixed(2)}|${Math.round(radius / 1000)}`;
 }
 
-function cacheGet(key: string): object[] | null {
-  const hit = NEARBY_CACHE.get(key);
-  if (!hit) return null;
-  if (hit.expires < Date.now()) {
+type CacheLookup =
+  | { state: "fresh"; payload: object[] }
+  | { state: "stale"; payload: object[] }
+  | { state: "neighbor"; payload: object[] }
+  | { state: "miss" };
+
+function cacheGet(lat: number, lng: number, radius: number): CacheLookup {
+  const key = cacheKey(lat, lng, radius);
+  const radiusBucket = Math.round(radius / 1000);
+  const now = Date.now();
+  const direct = NEARBY_CACHE.get(key);
+  if (direct) {
+    if (direct.expires > now) return { state: "fresh", payload: direct.payload };
+    if (direct.staleExpires > now) return { state: "stale", payload: direct.payload };
     NEARBY_CACHE.delete(key);
-    return null;
   }
-  return hit.payload;
+  // Nearest-neighbor: scan for any non-expired entry within ~1km of the requested point.
+  for (const entry of NEARBY_CACHE.values()) {
+    if (entry.staleExpires <= now) continue;
+    if (entry.radiusBucket !== radiusBucket) continue;
+    const dKm = haversineKm(lat, lng, entry.lat, entry.lng);
+    if (dKm <= NEARBY_NEIGHBOR_KM) {
+      return { state: "neighbor", payload: entry.payload };
+    }
+  }
+  return { state: "miss" };
 }
 
-function cacheSet(key: string, payload: object[]) {
+function cacheSet(lat: number, lng: number, radius: number, payload: object[]) {
+  const key = cacheKey(lat, lng, radius);
   if (NEARBY_CACHE.size >= NEARBY_CACHE_MAX) {
     const firstKey = NEARBY_CACHE.keys().next().value;
     if (firstKey) NEARBY_CACHE.delete(firstKey);
   }
-  NEARBY_CACHE.set(key, { expires: Date.now() + NEARBY_CACHE_TTL_MS, payload });
+  const now = Date.now();
+  NEARBY_CACHE.set(key, {
+    expires: now + NEARBY_CACHE_FRESH_MS,
+    staleExpires: now + NEARBY_CACHE_FRESH_MS + NEARBY_CACHE_STALE_MS,
+    payload,
+    lat,
+    lng,
+    radiusBucket: Math.round(radius / 1000),
+  });
+}
+
+function shapeResults(elements: OverpassElement[], lat: number, lng: number): object[] {
+  const seen = new Set<string>();
+  const results: object[] = [];
+  for (const el of elements) {
+    const elLat = el.lat ?? el.center?.lat ?? 0;
+    const elLng = el.lon ?? el.center?.lon ?? 0;
+    if (!elLat && !elLng) continue;
+
+    const rawName =
+      el.tags?.["name:en"] ??
+      el.tags?.["name"] ??
+      el.tags?.["official_name"] ??
+      "Islamic Center";
+
+    const dedupeKey = rawName.toLowerCase().trim();
+    if (seen.has(dedupeKey)) continue;
+    seen.add(dedupeKey);
+
+    const addrParts = [
+      el.tags?.["addr:housenumber"],
+      el.tags?.["addr:street"],
+      el.tags?.["addr:city"],
+      el.tags?.["addr:state"],
+    ].filter(Boolean);
+
+    const address = addrParts.length > 0 ? addrParts.join(", ") : "Address not listed";
+    const distMi = parseFloat((haversineKm(lat, lng, elLat, elLng) * 0.621371).toFixed(1));
+
+    const website =
+      el.tags?.["website"] ??
+      el.tags?.["contact:website"] ??
+      el.tags?.["url"] ??
+      undefined;
+
+    results.push({
+      id: `osm_${el.type}_${el.id}`,
+      name: rawName,
+      address,
+      distance: distMi,
+      lat: elLat,
+      lng: elLng,
+      claimed: false,
+      memberCount: 0,
+      website,
+    });
+  }
+  results.sort((a: any, b: any) => (a.distance ?? 999) - (b.distance ?? 999));
+  return results;
+}
+
+async function fetchAndCacheNearby(lat: number, lng: number, radius: number): Promise<object[]> {
+  const key = cacheKey(lat, lng, radius);
+  const existing = inFlight.get(key);
+  if (existing) return existing;
+  // Drop `relation` — masjids are almost always nodes/ways. Saves ~20-30% query time.
+  const query = [
+    `[out:json][timeout:10];`,
+    `(`,
+    `  node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lng});`,
+    `  way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${lat},${lng});`,
+    `);`,
+    `out center tags 50;`,
+  ].join("\n");
+  const promise = (async () => {
+    const elements = await queryOverpass(query);
+    const results = shapeResults(elements, lat, lng);
+    cacheSet(lat, lng, radius, results);
+    return results;
+  })();
+  inFlight.set(key, promise);
+  promise.finally(() => inFlight.delete(key));
+  return promise;
 }
 
 router.get("/masjids/nearby", async (req, res) => {
@@ -356,80 +464,31 @@ router.get("/masjids/nearby", async (req, res) => {
   }
 
   const clampedRadius = Math.min(Math.max(radius, 1000), 50000);
-  const ck = cacheKey(lat, lng, clampedRadius);
-  const cached = cacheGet(ck);
-  if (cached) {
-    res.json({ masjids: cached, cached: true });
+  const lookup = cacheGet(lat, lng, clampedRadius);
+
+  if (lookup.state === "fresh") {
+    res.json({ masjids: lookup.payload, cached: "fresh" });
+    return;
+  }
+  if (lookup.state === "stale" || lookup.state === "neighbor") {
+    res.json({ masjids: lookup.payload, cached: lookup.state });
+    fetchAndCacheNearby(lat, lng, clampedRadius).catch(() => {});
     return;
   }
 
-  const query = [
-    `[out:json][timeout:10];`,
-    `(`,
-    `  node["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
-    `  way["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
-    `  relation["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
-    `);`,
-    `out center tags 50;`,
-  ].join("\n");
-
   try {
-    const elements = await queryOverpass(query);
-    const seen = new Set<string>();
-    const results: object[] = [];
-
-    for (const el of elements) {
-      const elLat = el.lat ?? el.center?.lat ?? 0;
-      const elLng = el.lon ?? el.center?.lon ?? 0;
-      if (!elLat && !elLng) continue;
-
-      const rawName =
-        el.tags?.["name:en"] ??
-        el.tags?.["name"] ??
-        el.tags?.["official_name"] ??
-        "Islamic Center";
-
-      const key = rawName.toLowerCase().trim();
-      if (seen.has(key)) continue;
-      seen.add(key);
-
-      const addrParts = [
-        el.tags?.["addr:housenumber"],
-        el.tags?.["addr:street"],
-        el.tags?.["addr:city"],
-        el.tags?.["addr:state"],
-      ].filter(Boolean);
-
-      const address = addrParts.length > 0 ? addrParts.join(", ") : "Address not listed";
-      const distMi = parseFloat((haversineKm(lat, lng, elLat, elLng) * 0.621371).toFixed(1));
-
-      const website =
-        el.tags?.["website"] ??
-        el.tags?.["contact:website"] ??
-        el.tags?.["url"] ??
-        undefined;
-
-      results.push({
-        id: `osm_${el.type}_${el.id}`,
-        name: rawName,
-        address,
-        distance: distMi,
-        lat: elLat,
-        lng: elLng,
-        claimed: false,
-        memberCount: 0,
-        website,
-      });
-    }
-
-    results.sort((a: any, b: any) => (a.distance ?? 999) - (b.distance ?? 999));
-    cacheSet(ck, results);
+    const results = await fetchAndCacheNearby(lat, lng, clampedRadius);
     res.json({ masjids: results });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    res.status(502).json({ error: `Overpass query failed: ${msg}` });
+    if (__DEV__()) console.warn("[masjids/nearby] all mirrors failed:", msg);
+    res.json({ masjids: [], degraded: true });
   }
 });
+
+function __DEV__() {
+  return process.env.NODE_ENV !== "production";
+}
 
 router.post("/masjids/fetch-times", async (req, res) => {
   const { url, lat, lng, method } = req.body as {

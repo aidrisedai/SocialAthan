@@ -74,6 +74,24 @@ function parseTimeToDate(timeStr: string): Date | null {
   return parsed;
 }
 
+function resolveAdhanDate(prayer: PrayerTime): Date | null {
+  if (prayer.adhanDate) {
+    const fromIso = new Date(prayer.adhanDate);
+    if (!isNaN(fromIso.getTime())) return fromIso;
+  }
+  return parseTimeToDate(prayer.adhan);
+}
+
+async function ensureNotificationPermission(): Promise<boolean> {
+  const existing = await Notifications.getPermissionsAsync();
+  if (existing.granted) return true;
+  if (!existing.canAskAgain) return false;
+  const requested = await Notifications.requestPermissionsAsync({
+    ios: { allowAlert: true, allowBadge: true, allowSound: true, allowCriticalAlerts: true },
+  });
+  return requested.granted || requested.ios?.status === Notifications.IosAuthorizationStatus.AUTHORIZED;
+}
+
 function addMinutes(date: Date, minutes: number): Date {
   return new Date(date.getTime() + minutes * 60_000);
 }
@@ -142,9 +160,18 @@ export async function scheduleAllPrayerNotifications(
 ): Promise<void> {
   if (!notificationsSupported()) return;
 
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  if (!settings.masterEnabled) {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    return;
+  }
 
-  if (!settings.masterEnabled) return;
+  const granted = await ensureNotificationPermission();
+  if (!granted) {
+    if (__DEV__) console.warn("[notifications] permission not granted — skipping schedule");
+    return;
+  }
+
+  await Notifications.cancelAllScheduledNotificationsAsync();
 
   const now = new Date();
   const rsvpPromptEnabled = settings.rsvpPrompt;
@@ -152,7 +179,7 @@ export async function scheduleAllPrayerNotifications(
   for (const prayer of prayerTimes) {
     const perPrayer = settings.perPrayer[prayer.prayer] ?? { adhan: true, iqamah: true };
 
-    const adhanDate = parseTimeToDate(prayer.adhan);
+    const adhanDate = resolveAdhanDate(prayer);
     if (!adhanDate) continue;
 
     if (settings.adhan && perPrayer.adhan && adhanDate > now) {
@@ -173,6 +200,7 @@ export async function scheduleAllPrayerNotifications(
             date: adhanDate,
           },
         });
+        if (__DEV__) console.log(`[notifications] scheduled adhan ${prayer.label} at ${adhanDate.toISOString()}`);
       } catch (e) {
         if (__DEV__) console.warn("[notifications] adhan schedule failed:", e);
       }

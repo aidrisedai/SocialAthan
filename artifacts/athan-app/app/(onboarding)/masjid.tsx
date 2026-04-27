@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import * as Location from "expo-location";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -16,12 +15,20 @@ import { useColors } from "@/hooks/useColors";
 import { Masjid, useApp } from "@/context/AppContext";
 import { api } from "@/context/api";
 
+const DEFAULT_LAT = 40.7128;
+const DEFAULT_LNG = -74.006;
+
+function isDefaultCoords(c: { lat: number; lng: number }) {
+  return Math.abs(c.lat - DEFAULT_LAT) < 0.01 && Math.abs(c.lng - DEFAULT_LNG) < 0.01;
+}
+
 export default function MasjidSelectionScreen() {
   const colors = useColors();
-  const { nearbyMasjids, setPrimaryMasjid } = useApp();
+  const { nearbyMasjids, setPrimaryMasjid, coords, requestLocation } = useApp();
   const [selected, setSelected] = useState<string | null>(null);
   const [localList, setLocalList] = useState<Masjid[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
   const hasFetched = useRef(false);
 
@@ -31,28 +38,41 @@ export default function MasjidSelectionScreen() {
     setSearchError(null);
     setSearching(true);
     try {
-      const { status } = await Location.getForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setSearchError("Location permission needed to find nearby masjids.");
-        return;
+      let workingCoords = coords;
+      if (isDefaultCoords(workingCoords)) {
+        setStatus("Connecting to your location…");
+        const result = await requestLocation();
+        if (result === "denied") {
+          setSearchError("Location permission needed to find nearby masjids.");
+          return;
+        }
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+
+      setStatus("Looking for masjids near you…");
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 12000)
+        setTimeout(() => reject(new Error("timeout")), 15000)
       );
       const res = await Promise.race([
-        api.masjids.nearby(loc.coords.latitude, loc.coords.longitude),
+        api.masjids.nearby(workingCoords.lat, workingCoords.lng),
         timeoutPromise,
       ]);
       const results = (res.masjids ?? []) as Masjid[];
-      if (results.length > 0) setLocalList(results);
-      else setSearchError("No masjids found within 10 km. You can pick one later in settings.");
+      const degraded = (res as { degraded?: boolean }).degraded === true;
+      if (results.length > 0) {
+        setLocalList(results);
+        setStatus(null);
+      } else if (degraded) {
+        setSearchError("Search service is slow right now. Try again, or pick a masjid later from settings.");
+      } else {
+        setSearchError("No masjids found within 10 km. You can pick one later in settings.");
+      }
     } catch {
       setSearchError("Search took too long. Tap Try again or skip for now.");
     } finally {
       setSearching(false);
+      setStatus(null);
     }
-  }, []);
+  }, [coords, requestLocation]);
 
   useEffect(() => {
     if (hasFetched.current || displayList.length > 0) return;
@@ -102,9 +122,14 @@ export default function MasjidSelectionScreen() {
           <View style={styles.loadingRow}>
             <ActivityIndicator size="small" color={colors.mutedForeground} />
             <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>
-              Searching nearby masjids…
+              {status ?? "Searching nearby masjids…"}
             </Text>
           </View>
+        )}
+        {searching && displayList.length > 0 && (
+          <Text style={[styles.partialHint, { color: colors.mutedForeground }]}>
+            {`Found ${displayList.length}. Looking for more — tap any to continue.`}
+          </Text>
         )}
         {!searching && displayList.length === 0 && (
           <View style={styles.emptyBlock}>
@@ -268,6 +293,13 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontFamily: "Lora_400Regular",
+  },
+  partialHint: {
+    fontSize: 12,
+    fontFamily: "Lora_400Regular",
+    textAlign: "center",
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   emptyBlock: {
     alignItems: "center",

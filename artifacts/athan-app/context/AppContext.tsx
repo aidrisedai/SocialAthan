@@ -203,7 +203,9 @@ export function buildPrayerTimes(
 
     const iqamah = override?.iqamah;
     const adhanTime = new Date(adhanDate);
-    const completed = !isNaN(adhanTime.getTime()) && adhanTime < new Date(now.getTime() - 15 * 60_000);
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+    const completed = !isNaN(adhanTime.getTime()) && adhanTime < startOfToday;
 
     return {
       prayer: cp.prayer,
@@ -277,7 +279,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function load() {
       try {
-        const [ob, usr, pm, rsvps, fr, st, ns, mthd, ml, token] = await Promise.all([
+        const [ob, usr, pm, rsvps, fr, st, ns, mthd, ml, token, lc] = await Promise.all([
           AsyncStorage.getItem("onboardingComplete"),
           AsyncStorage.getItem("user"),
           AsyncStorage.getItem("primaryMasjid"),
@@ -288,6 +290,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem("calcMethod"),
           AsyncStorage.getItem("masjidList"),
           AsyncStorage.getItem("authToken"),
+          AsyncStorage.getItem("lastCoords"),
         ]);
         if (ob === "true") setOnboardingCompleteState(true);
         if (usr) setUser(JSON.parse(usr));
@@ -299,6 +302,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (mthd) setCalcMethodState(mthd as CalcMethod);
         if (ml) setMasjidList(JSON.parse(ml));
         if (token) setHasAuthToken(true);
+        if (lc) {
+          const parsed = JSON.parse(lc) as { lat: number; lng: number };
+          if (typeof parsed?.lat === "number" && typeof parsed?.lng === "number") {
+            setCoords(parsed);
+          }
+        }
       } catch (e) {
         if (__DEV__) console.warn("[AppContext] Failed to load persisted state:", e);
       }
@@ -487,9 +496,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { status } = await Location.getForegroundPermissionsAsync();
         if (status !== "granted") return;
 
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+        const lastKnown = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60_000 });
+        if (lastKnown) {
+          const c = { lat: lastKnown.coords.latitude, lng: lastKnown.coords.longitude };
+          setCoords(c);
+          AsyncStorage.setItem("lastCoords", JSON.stringify(c)).catch(() => {});
+        }
+
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest });
         const initial = { lat: loc.coords.latitude, lng: loc.coords.longitude };
         setCoords(initial);
+        AsyncStorage.setItem("lastCoords", JSON.stringify(initial)).catch(() => {});
 
         sub = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.Low, distanceInterval: 5000, timeInterval: 300_000 },
@@ -549,9 +566,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") return "denied";
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-      setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
-      return "granted";
+
+      const lastKnown = await Location.getLastKnownPositionAsync({ maxAge: 5 * 60_000 });
+      if (lastKnown) {
+        const c = { lat: lastKnown.coords.latitude, lng: lastKnown.coords.longitude };
+        setCoords(c);
+        AsyncStorage.setItem("lastCoords", JSON.stringify(c)).catch(() => {});
+      }
+
+      const fresh = await Promise.race([
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Lowest }),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000)),
+      ]);
+      if (fresh) {
+        const c = { lat: fresh.coords.latitude, lng: fresh.coords.longitude };
+        setCoords(c);
+        AsyncStorage.setItem("lastCoords", JSON.stringify(c)).catch(() => {});
+        return "granted";
+      }
+
+      const fallback = lastKnown ?? (await Location.getLastKnownPositionAsync({}));
+      if (fallback) {
+        return "granted";
+      }
+      return "denied";
     } catch {
       return "denied";
     }

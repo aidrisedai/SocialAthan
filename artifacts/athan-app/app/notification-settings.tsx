@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Linking,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -28,6 +31,21 @@ export default function NotificationSettingsScreen() {
   const colors = useColors();
   const { notificationSettings, updateNotificationSettings } = useApp();
   const s = notificationSettings;
+  const [permBlocked, setPermBlocked] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    let active = true;
+    async function check() {
+      const status = await Notifications.getPermissionsAsync();
+      if (!active) return;
+      setPermBlocked(!status.granted && !status.canAskAgain);
+    }
+    check();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function togglePerPrayer(prayer: Prayer, field: "adhan" | "iqamah", value: boolean) {
     updateNotificationSettings({
@@ -49,6 +67,23 @@ export default function NotificationSettingsScreen() {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
+        {permBlocked && (
+          <Pressable
+            onPress={() => Linking.openSettings().catch(() => {})}
+            style={[styles.permBanner, { backgroundColor: "#3A1A1A", borderColor: "#FF453A" }]}
+          >
+            <Ionicons name="alert-circle-outline" size={20} color="#FF453A" />
+            <View style={styles.permBannerText}>
+              <Text style={[styles.permBannerTitle, { color: "#FFB4AE" }]}>
+                Notifications are blocked
+              </Text>
+              <Text style={[styles.permBannerSub, { color: "#FF8A85" }]}>
+                Tap to open Settings and enable Athan notifications
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#FF453A" />
+          </Pressable>
+        )}
         <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.row}>
             <View style={styles.rowLeft}>
@@ -285,6 +320,29 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
+  },
+  permBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    margin: 16,
+    marginTop: 0,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  permBannerText: {
+    flex: 1,
+  },
+  permBannerTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    fontFamily: "Lora_600SemiBold",
+  },
+  permBannerSub: {
+    fontSize: 12,
+    fontFamily: "Lora_400Regular",
+    marginTop: 2,
   },
   row: {
     flexDirection: "row",
