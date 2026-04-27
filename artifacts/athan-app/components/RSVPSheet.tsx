@@ -48,16 +48,13 @@ const OPTIONS: Option[] = [
 export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose }: Props) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { updateRSVP, markPrayerAttended, prayerTimes } = useApp();
+  const { updateRSVP, prayerTimes } = useApp();
 
   const currentRSVP = prayerTimes.find((p) => p.prayer === prayer)?.rsvp;
 
   function handleSelect(status: RSVPStatus) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     updateRSVP(prayer, status);
-    if (status === "going") {
-      markPrayerAttended(prayer);
-    }
     onClose();
   }
 

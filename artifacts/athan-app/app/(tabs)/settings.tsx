@@ -18,7 +18,23 @@ import { useApp } from "@/context/AppContext";
 export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, notificationSettings, updateNotificationSettings, primaryMasjid } = useApp();
+  const { user, notificationSettings, updateNotificationSettings, primaryMasjid, calcMethod } = useApp();
+
+  const CALC_LABELS: Record<string, string> = {
+    isna: "ISNA",
+    mwl: "Muslim World League",
+    umm: "Umm al-Qura",
+    egypt: "Egyptian",
+    karachi: "Karachi",
+  };
+
+  const RECITER_LABELS: Record<string, string> = {
+    makkah: "Makkah",
+    egypt: "Egypt",
+    madina: "Madinah",
+    alafasy: "Mishary Alafasy",
+    husary: "Mahmoud Khalil al-Husary",
+  };
 
   const topPaddingForWeb = Platform.OS === "web" ? 67 : insets.top;
   const bottomPaddingForWeb = Platform.OS === "web" ? 34 : 0;
@@ -112,7 +128,9 @@ export default function SettingsScreen() {
           <Ionicons name="calculator-outline" size={20} color={colors.primary} />
           <View style={styles.rowText}>
             <Text style={[styles.rowLabel, { color: colors.foreground }]}>Calculation Method</Text>
-            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>ISNA (Default)</Text>
+            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
+              {CALC_LABELS[calcMethod] ?? calcMethod.toUpperCase()}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
         </Pressable>
@@ -125,7 +143,9 @@ export default function SettingsScreen() {
           <Ionicons name="volume-high-outline" size={20} color={colors.primary} />
           <View style={styles.rowText}>
             <Text style={[styles.rowLabel, { color: colors.foreground }]}>Adhan Reciter</Text>
-            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>Makkah (Default)</Text>
+            <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
+              {RECITER_LABELS[notificationSettings.adhanReciter] ?? notificationSettings.adhanReciter}
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
         </Pressable>

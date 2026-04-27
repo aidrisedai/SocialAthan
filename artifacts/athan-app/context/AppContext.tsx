@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Platform } from "react-native";
@@ -451,6 +452,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
   }, []);
+
+  const attendanceCreditedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const today = new Date().toDateString();
+    for (const p of prayerTimes) {
+      const key = `${today}_${p.prayer}`;
+      if (p.completed && prayerRsvps[p.prayer] === "going" && !attendanceCreditedRef.current.has(key)) {
+        attendanceCreditedRef.current.add(key);
+        markPrayerAttended(p.prayer);
+      }
+    }
+  }, [prayerTimes, prayerRsvps, markPrayerAttended]);
 
   const updateNotificationSettings = useCallback((s: Partial<NotificationSettings>) => {
     setNotificationSettings((prev) => {

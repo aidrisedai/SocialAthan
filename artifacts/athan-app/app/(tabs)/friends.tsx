@@ -202,14 +202,29 @@ export default function FriendsScreen() {
                 <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
                   Add friends to see them going to prayers
                 </Text>
-                <Pressable
-                  onPress={() => router.push("/friend-discover")}
-                  style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
-                >
-                  <Text style={[styles.inviteBtnText, { color: colors.primaryForeground }]}>
-                    Add Friends
-                  </Text>
-                </Pressable>
+                <View style={styles.emptyActions}>
+                  <Pressable
+                    onPress={() => router.push("/invite-link")}
+                    style={[styles.emptyActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  >
+                    <Ionicons name="logo-whatsapp" size={18} color={colors.primary} />
+                    <Text style={[styles.emptyActionText, { color: colors.foreground }]}>WhatsApp / SMS</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push("/qr-scan")}
+                    style={[styles.emptyActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  >
+                    <Ionicons name="qr-code-outline" size={18} color={colors.primary} />
+                    <Text style={[styles.emptyActionText, { color: colors.foreground }]}>Scan QR Code</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => router.push("/friend-search")}
+                    style={[styles.emptyActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  >
+                    <Ionicons name="search-outline" size={18} color={colors.primary} />
+                    <Text style={[styles.emptyActionText, { color: colors.foreground }]}>Find by Username</Text>
+                  </Pressable>
+                </View>
               </View>
             ) : (
               filteredFriends.map((f) => (
@@ -347,6 +362,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
+  },
+  emptyActions: {
+    marginTop: 16,
+    gap: 8,
+    width: "100%",
+    paddingHorizontal: 8,
+  },
+  emptyActionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  emptyActionText: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    fontWeight: "500",
   },
   discoverSection: {
     padding: 16,
