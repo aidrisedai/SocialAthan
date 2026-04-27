@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -24,7 +24,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const { updateUser } = useApp();
   const [name, setName] = useState("");
-  const defaultUsername = generateUsername();
+  const defaultUsername = useMemo(() => generateUsername(), []);
 
   function handleContinue() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

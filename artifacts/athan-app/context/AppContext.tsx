@@ -159,6 +159,27 @@ const SAMPLE_FRIENDS: Friend[] = [
   { id: "f3", name: "Omar Abdullah", username: "omar_a", isConnected: true },
 ];
 
+function makeSeedMsg(id: string, senderId: string, text: string, msAgo: number): Message {
+  return { id, senderId, text, timestamp: Date.now() - msAgo };
+}
+
+const SEED_MESSAGES: Record<string, Message[]> = {
+  "dm_f1": [
+    makeSeedMsg("seed_f1_1", "f1",     "Assalamu alaykum! Joining for Fajr today?", 3_600_000),
+    makeSeedMsg("seed_f1_2", "user1",  "Wa alaykum assalam! Insha'Allah, see you there.", 3_500_000),
+    makeSeedMsg("seed_f1_3", "f1",     "Barak Allahu feek 🤲", 3_400_000),
+  ],
+  "dm_f2": [
+    makeSeedMsg("seed_f2_1", "user1",  "Yusuf, are you going to Dhuhr today?", 7_200_000),
+    makeSeedMsg("seed_f2_2", "f2",     "Yes! Already heading out. Meet at the masjid.", 7_100_000),
+    makeSeedMsg("seed_f2_3", "user1",  "Perfect, see you in 10 minutes.", 7_000_000),
+  ],
+  "dm_f3": [
+    makeSeedMsg("seed_f3_1", "f3",     "Don't forget Maghrib tonight — special lecture after.", 1_800_000),
+    makeSeedMsg("seed_f3_2", "user1",  "JazakAllah khair for the reminder!", 1_700_000),
+  ],
+};
+
 const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   masterEnabled: true,
   adhan: true,
@@ -241,7 +262,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [friends, setFriends] = useState<Friend[]>(SAMPLE_FRIENDS);
   const [streaks, setStreaks] = useState<StreakEntry[]>(getDefaultStreaks());
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
-  const [messages, setMessages] = useState<Record<string, Message[]>>({});
+  const [messages, setMessages] = useState<Record<string, Message[]>>(SEED_MESSAGES);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
