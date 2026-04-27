@@ -1,8 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Location from "expo-location";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Linking,
   Platform,
   Pressable,
   SafeAreaView,
@@ -11,22 +11,30 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useApp } from "@/context/AppContext";
 
 export default function LocationScreen() {
   const colors = useColors();
+  const { requestLocation } = useApp();
   const [requesting, setRequesting] = useState(false);
+  const [denied, setDenied] = useState(false);
 
-  async function requestLocation() {
+  async function handleRequestLocation() {
     setRequesting(true);
-    if (Platform.OS !== "web") {
-      try {
-        await Location.requestForegroundPermissionsAsync();
-      } catch (e) {
-        if (__DEV__) console.warn("[onboarding/location] permission request failed:", e);
-      }
-    }
+    setDenied(false);
+    const result = await requestLocation();
     setRequesting(false);
-    router.push("/(onboarding)/masjid");
+    if (result === "granted") {
+      router.push("/(onboarding)/masjid");
+    } else {
+      setDenied(true);
+    }
+  }
+
+  function openSettings() {
+    if (Platform.OS !== "web") {
+      Linking.openSettings();
+    }
   }
 
   function skipLocation() {
@@ -44,29 +52,62 @@ export default function LocationScreen() {
           <View style={[styles.dot, { backgroundColor: colors.border }]} />
         </View>
 
-        <View style={[styles.iconCircle, { backgroundColor: colors.secondary }]}>
-          <Ionicons name="location" size={42} color={colors.foreground} />
+        <View style={[styles.iconCircle, { backgroundColor: denied ? "#3A1A1A" : colors.secondary }]}>
+          <Ionicons
+            name={denied ? "location-outline" : "location"}
+            size={42}
+            color={denied ? "#FF453A" : colors.foreground}
+          />
         </View>
 
         <View style={styles.textBlock}>
           <Text style={[styles.headline, { color: colors.foreground }]}>
-            Find Nearby Masjids
+            {denied ? "Location Access Needed" : "Find Nearby Masjids"}
           </Text>
           <Text style={[styles.body, { color: colors.mutedForeground }]}>
-            We'll suggest masjids near you so you can pick your primary one. Your location is never shared with other users.
+            {denied
+              ? Platform.OS === "web"
+                ? "Please allow location access in your browser when prompted, then try again."
+                : "Location was denied. Please open Settings and enable location access for this app."
+              : "We'll suggest masjids near you so you can pick your primary one. Your location is never shared with other users."}
           </Text>
         </View>
 
-        <Pressable
-          onPress={requestLocation}
-          style={[styles.ctaBtn, { backgroundColor: colors.foreground, opacity: requesting ? 0.7 : 1 }]}
-          disabled={requesting}
-        >
-          <Ionicons name="location-outline" size={20} color={colors.primaryForeground} />
-          <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>
-            {requesting ? "Getting location..." : "Allow Location"}
-          </Text>
-        </Pressable>
+        {denied ? (
+          <View style={styles.deniedActions}>
+            {Platform.OS !== "web" && (
+              <Pressable
+                onPress={openSettings}
+                style={[styles.ctaBtn, { backgroundColor: colors.foreground }]}
+              >
+                <Ionicons name="settings-outline" size={20} color={colors.primaryForeground} />
+                <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>
+                  Open Settings
+                </Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={handleRequestLocation}
+              style={[styles.ctaBtn, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
+            >
+              <Ionicons name="refresh-outline" size={20} color={colors.foreground} />
+              <Text style={[styles.ctaText, { color: colors.foreground }]}>
+                Try Again
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable
+            onPress={handleRequestLocation}
+            style={[styles.ctaBtn, { backgroundColor: colors.foreground, opacity: requesting ? 0.7 : 1 }]}
+            disabled={requesting}
+          >
+            <Ionicons name="location-outline" size={20} color={colors.primaryForeground} />
+            <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>
+              {requesting ? "Getting location..." : "Allow Location"}
+            </Text>
+          </Pressable>
+        )}
 
         <Pressable onPress={skipLocation}>
           <Text style={[styles.skipText, { color: colors.mutedForeground }]}>
@@ -139,5 +180,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Lora_400Regular",
     textDecorationLine: "underline",
+  },
+  deniedActions: {
+    width: "100%",
+    gap: 12,
   },
 });

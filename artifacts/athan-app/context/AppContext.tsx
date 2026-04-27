@@ -123,6 +123,7 @@ interface AppContextValue {
   clearPendingRSVP: () => void;
   setPendingRSVP: (prayer: Prayer) => void;
   coords: { lat: number; lng: number };
+  requestLocation: () => Promise<"granted" | "denied">;
   occasionalMasjids: Masjid[];
   addOccasionalMasjid: (masjidId: string) => void;
   removeOccasionalMasjid: (masjidId: string) => void;
@@ -517,6 +518,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     setupLocation();
     return () => { sub?.remove(); };
+  }, []);
+
+  const requestLocation = useCallback(async (): Promise<"granted" | "denied"> => {
+    if (Platform.OS === "web") {
+      return new Promise((resolve) => {
+        if (!navigator.geolocation) { resolve("denied"); return; }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            resolve("granted");
+          },
+          () => resolve("denied"),
+          { timeout: 10000, enableHighAccuracy: false }
+        );
+      });
+    }
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return "denied";
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+      return "granted";
+    } catch {
+      return "denied";
+    }
   }, []);
 
   useEffect(() => {
@@ -940,6 +966,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setPendingRSVP,
       clearPendingRSVP,
       coords,
+      requestLocation,
       occasionalMasjids,
       addOccasionalMasjid,
       removeOccasionalMasjid,
@@ -974,6 +1001,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setPendingRSVP,
       clearPendingRSVP,
       coords,
+      requestLocation,
       occasionalMasjids,
       addOccasionalMasjid,
       removeOccasionalMasjid,
