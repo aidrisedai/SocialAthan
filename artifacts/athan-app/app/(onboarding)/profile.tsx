@@ -178,11 +178,11 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 28,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   body: {
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   inputContainer: {
     flexDirection: "row",
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   usernameCard: {
     padding: 18,
@@ -206,18 +206,18 @@ const styles = StyleSheet.create({
   },
   usernameLabel: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     textTransform: "uppercase",
     letterSpacing: 1,
   },
   username: {
     fontSize: 20,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   usernameNote: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   ctaBtn: {
     flexDirection: "row",
@@ -230,6 +230,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
 });

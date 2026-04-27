@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   searchContainer: {
     flexDirection: "row",
@@ -139,11 +139,11 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   sectionLabel: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   masjidName: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   unclaimedBadge: {
     paddingHorizontal: 8,
@@ -181,11 +181,11 @@ const styles = StyleSheet.create({
   },
   unclaimedText: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   masjidAddress: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   metaRow: {
     flexDirection: "row",
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   rightActions: {
     flexDirection: "row",

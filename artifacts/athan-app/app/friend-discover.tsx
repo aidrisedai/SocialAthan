@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   searchContainer: {
     flexDirection: "row",
@@ -296,11 +296,11 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   sectionLabel: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
@@ -313,12 +313,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     textAlign: "center",
   },
   emptyHint: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
   },
   discoverCard: {
@@ -345,11 +345,11 @@ const styles = StyleSheet.create({
   discoverLabel: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   discoverSub: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   userRow: {
     flexDirection: "row",
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   userInfo: {
     flex: 1,
@@ -380,11 +380,11 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   userHandle: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   addBtn: {
     width: 34,

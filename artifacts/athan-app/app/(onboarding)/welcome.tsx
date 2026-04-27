@@ -92,12 +92,12 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: "700",
     lineHeight: 42,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   body: {
     fontSize: 16,
     lineHeight: 24,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   features: { gap: 14 },
   featureRow: {
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   ctaBtn: {
     flexDirection: "row",
@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   disclaimer: {
     textAlign: "center",
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
 });

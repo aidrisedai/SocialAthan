@@ -134,12 +134,12 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 14,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   friendName: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     flex: 1,
   },
   messagesContainer: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     lineHeight: 20,
   },
   emptyChat: {
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   },
   emptyChatText: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
   },
   inputRow: {
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 22,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     maxHeight: 100,
   },
   sendBtn: {

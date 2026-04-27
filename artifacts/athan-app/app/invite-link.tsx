@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   content: {
     flex: 1,
@@ -148,11 +148,11 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 24,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   body: {
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
     lineHeight: 22,
   },
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     flex: 1,
   },
   copyBtn: {
@@ -191,6 +191,6 @@ const styles = StyleSheet.create({
   },
   shareBtnText: {
     fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
 });

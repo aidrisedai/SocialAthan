@@ -136,11 +136,11 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   body: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   list: {
     flex: 1,
@@ -163,11 +163,11 @@ const styles = StyleSheet.create({
   masjidName: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   masjidAddress: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   metaRow: {
     flexDirection: "row",
@@ -176,11 +176,11 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   members: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   footer: {
     padding: 20,
@@ -194,6 +194,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
 });

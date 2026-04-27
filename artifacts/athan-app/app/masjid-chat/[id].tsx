@@ -206,11 +206,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   headerSub: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   messageList: {
     padding: 16,
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   msgAvatarText: {
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   msgContent: {
     flex: 1,
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   msgSender: {
     fontSize: 11,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 4,
   },
   msgBubble: {
@@ -258,12 +258,12 @@ const styles = StyleSheet.create({
   },
   msgText: {
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     lineHeight: 20,
   },
   msgTime: {
     fontSize: 10,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     paddingHorizontal: 4,
   },
   inputBar: {
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     maxHeight: 120,
   },
   sendBtn: {

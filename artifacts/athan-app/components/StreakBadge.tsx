@@ -81,11 +81,11 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   affirmation: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   countSection: {
     flexDirection: "row",
@@ -95,11 +95,11 @@ const styles = StyleSheet.create({
   count: {
     fontSize: 28,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   days: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   compactContainer: {
     flexDirection: "row",
@@ -112,6 +112,6 @@ const styles = StyleSheet.create({
   compactCount: {
     fontSize: 13,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
 });

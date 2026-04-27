@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   masjidBanner: {
     flexDirection: "row",
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   masjidName: {
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     flex: 1,
   },
   claimedBadge: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   claimedText: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   claimBtn: {
     flexDirection: "row",
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   claimBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   claimForm: {
     margin: 16,
@@ -367,11 +367,11 @@ const styles = StyleSheet.create({
   claimFormTitle: {
     fontSize: 17,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   claimFormBody: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     lineHeight: 20,
   },
   inputContainer: {
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   inputField: {
     flex: 1,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   claimFormBtns: {
     flexDirection: "row",
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   submitBtn: {
     flex: 1,
@@ -413,11 +413,11 @@ const styles = StyleSheet.create({
   submitBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   sectionLabel: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 4,
     textTransform: "uppercase",
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   sectionNote: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     paddingHorizontal: 20,
     paddingBottom: 12,
     lineHeight: 18,
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
   prayerLabel: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   timeInputs: {
     flexDirection: "row",
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   timeInputLabel: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
   },
   inputText: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   saveBtn: {
     flexDirection: "row",
@@ -480,6 +480,6 @@ const styles = StyleSheet.create({
   saveBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
 });

@@ -197,11 +197,11 @@ const styles = StyleSheet.create({
   prayerName: {
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   times: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   options: {
     paddingHorizontal: 20,
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   optionSublabel: {
     fontSize: 13,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   dismissBtn: {
     alignItems: "center",
@@ -234,6 +234,6 @@ const styles = StyleSheet.create({
   },
   dismissText: {
     fontSize: 15,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
 });

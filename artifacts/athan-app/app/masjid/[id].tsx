@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     flex: 1,
     textAlign: "center",
   },
@@ -200,12 +200,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   address: {
     fontSize: 14,
     textAlign: "center",
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   metaRow: {
     flexDirection: "row",
@@ -222,11 +222,11 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   sectionLabel: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   prayerName: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     flex: 1,
   },
   times: {
@@ -258,13 +258,13 @@ const styles = StyleSheet.create({
   },
   timeLabel: {
     fontSize: 10,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
   timeValue: {
     fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   timeDivider: {
     width: 1,
@@ -287,11 +287,11 @@ const styles = StyleSheet.create({
   claimTitle: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   claimSub: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   chatBtn: {
     flexDirection: "row",
@@ -310,11 +310,11 @@ const styles = StyleSheet.create({
   chatBtnTitle: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   chatBtnSub: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   setPrimaryBtn: {
     margin: 16,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   setPrimaryText: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   occasionalBtn: {
     margin: 16,
@@ -342,6 +342,6 @@ const styles = StyleSheet.create({
   occasionalText: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
 });

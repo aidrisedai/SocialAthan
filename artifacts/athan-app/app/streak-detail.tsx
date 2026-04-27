@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   summaryRow: {
     flexDirection: "row",
@@ -187,16 +187,16 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   summaryLabel: {
     fontSize: 11,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
   },
   sectionLabel: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   prayerLabel: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   streakBadge: {
     flexDirection: "row",
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   streakCount: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   progressBar: {
     height: 6,
@@ -254,11 +254,11 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 10,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   lastDate: {
     fontSize: 11,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   milestoneCard: {
     flexDirection: "row",
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   milestoneLabel: {
     fontSize: 10,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     textAlign: "center",
   },
 });

@@ -114,16 +114,16 @@ const styles = StyleSheet.create({
   },
   detailBtnText: {
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   subtitle: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   summaryRow: {
     flexDirection: "row",
@@ -141,11 +141,11 @@ const styles = StyleSheet.create({
   summaryCount: {
     fontSize: 36,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   summaryLabel: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
@@ -157,12 +157,12 @@ const styles = StyleSheet.create({
   },
   affirmationText: {
     fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     textAlign: "center",
   },
   sectionLabel: {
     fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   },
   privacyText: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     flex: 1,
     lineHeight: 20,
   },

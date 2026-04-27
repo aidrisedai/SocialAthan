@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   nextBadgeText: {
     fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     color: "#8E8E93",
     letterSpacing: 1.2,
   },
@@ -200,18 +200,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 1,
     textTransform: "uppercase",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   adhanTime: {
     fontSize: 30,
     fontWeight: "700",
     marginTop: 4,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   iqamahTime: {
     fontSize: 13,
     marginTop: 2,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   completedBadge: {
     width: 32,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   rsvpText: {
     fontSize: 12,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   rsvpCTA: {
     borderWidth: 1,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   rsvpCTAText: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   socialRow: {
     flexDirection: "row",
@@ -266,10 +266,10 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 10,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   socialText: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
 });

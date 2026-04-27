@@ -3,7 +3,12 @@ import React from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+interface BottomTabBarProps {
+  state: { index: number; routes: { key: string; name: string }[] };
+  descriptors: Record<string, { options: { tabBarAccessibilityLabel?: string } }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  navigation: any;
+}
 
 const TAB_LABELS: Record<string, string> = {
   index: "Home",
@@ -76,7 +81,7 @@ function DarkTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 export default function TabLayout() {
   return (
     <Tabs
-      tabBar={(props) => <DarkTabBar {...props} />}
+      tabBar={(props) => <DarkTabBar {...(props as unknown as BottomTabBarProps)} />}
       screenOptions={{ headerShown: false }}
     >
       <Tabs.Screen name="index" options={{ title: "Home" }} />
@@ -101,11 +106,11 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     letterSpacing: 0.2,
   },
   tabLabelActive: {
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   dot: {
     width: 4,

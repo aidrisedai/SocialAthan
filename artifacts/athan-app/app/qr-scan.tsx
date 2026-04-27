@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   tabs: {
     flexDirection: "row",
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   codeSection: {
     flex: 1,
@@ -327,15 +327,15 @@ const styles = StyleSheet.create({
   qrUsername: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   qrLink: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   qrNote: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
   },
   scanSection: {
@@ -387,12 +387,12 @@ const styles = StyleSheet.create({
   permissionText: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
     textAlign: "center",
   },
   permissionSub: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
     lineHeight: 20,
   },
@@ -405,6 +405,6 @@ const styles = StyleSheet.create({
   allowBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
 });

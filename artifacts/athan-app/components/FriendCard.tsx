@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   info: {
     flex: 1,
@@ -128,11 +128,11 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   username: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   goingBadge: {
     flexDirection: "row",
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   goingText: {
     fontSize: 11,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   actions: {
     flexDirection: "row",
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   duasLabel: {
     width: "100%",
     fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     marginBottom: 2,
@@ -184,6 +184,6 @@ const styles = StyleSheet.create({
   },
   duaText: {
     fontSize: 12,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
 });

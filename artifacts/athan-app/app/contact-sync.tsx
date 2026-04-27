@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   content: {
     flex: 1,
@@ -275,12 +275,12 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 22,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
     textAlign: "center",
   },
   body: {
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
     lineHeight: 22,
   },
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   ctaBtn: {
     flexDirection: "row",
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   ctaBtnText: {
     fontSize: 16,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   resultsHeader: {
     flexDirection: "row",
@@ -320,12 +320,12 @@ const styles = StyleSheet.create({
   resultsTitle: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   addAllText: {
     fontSize: 14,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   userRow: {
     flexDirection: "row",
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 16,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   userInfo: {
     flex: 1,
@@ -356,11 +356,11 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   userHandle: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   addBtn: {
     width: 34,

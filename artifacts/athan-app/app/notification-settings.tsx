@@ -269,11 +269,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   sectionLabel: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 8,
@@ -305,11 +305,11 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 15,
     fontWeight: "500",
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   rowSub: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     lineHeight: 16,
   },
   divider: {
@@ -326,13 +326,13 @@ const styles = StyleSheet.create({
   },
   noteText: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     lineHeight: 18,
     flex: 1,
   },
   perPrayerColLabel: {
     fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     textTransform: "uppercase",
     letterSpacing: 0.6,
     width: 58,

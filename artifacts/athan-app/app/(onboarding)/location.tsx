@@ -111,13 +111,13 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     textAlign: "center",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   body: {
     fontSize: 15,
     lineHeight: 22,
     textAlign: "center",
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     paddingHorizontal: 10,
   },
   ctaBtn: {
@@ -133,11 +133,11 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   skipText: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textDecorationLine: "underline",
   },
 });

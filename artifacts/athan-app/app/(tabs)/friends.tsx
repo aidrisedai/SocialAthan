@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   addBtn: {
     width: 38,
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
   tabScroll: { flexGrow: 0 },
   tabChip: {
@@ -356,11 +356,11 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 13,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   sectionLabel: {
     fontSize: 11,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
@@ -376,13 +376,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
     marginTop: 8,
   },
   emptyBody: {
     fontSize: 14,
     textAlign: "center",
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     lineHeight: 20,
   },
   inviteBtn: {
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   inviteBtnText: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   emptyActions: {
     marginTop: 16,
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   emptyActionText: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     fontWeight: "500",
   },
   aggregateCard: {
@@ -426,11 +426,11 @@ const styles = StyleSheet.create({
   },
   aggregateTitle: {
     fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   aggregateSub: {
     fontSize: 12,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     marginBottom: 8,
   },
   aggregateRows: {
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   aggregatePrayer: {
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
   },
   aggregatePill: {
     flexDirection: "row",
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   },
   aggregateCount: {
     fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   discoverSection: {
     padding: 16,
@@ -483,10 +483,10 @@ const styles = StyleSheet.create({
   discoverLabel: {
     fontSize: 15,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   discoverSub: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
   },
 });

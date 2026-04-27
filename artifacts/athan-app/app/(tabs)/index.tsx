@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     marginBottom: 2,
     textTransform: "uppercase",
     letterSpacing: 0.6,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   masjidName: {
     fontSize: 20,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
   },
   masjidBtn: {
     width: 40,
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   noMasjidText: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     flex: 1,
   },
   sheetOverlay: {

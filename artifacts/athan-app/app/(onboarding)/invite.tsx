@@ -131,12 +131,12 @@ const styles = StyleSheet.create({
   headline: {
     fontSize: 26,
     fontWeight: "700",
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Lora_700Bold",
     textAlign: "center",
   },
   body: {
     fontSize: 15,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textAlign: "center",
     lineHeight: 22,
   },
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   benefitText: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Lora_500Medium",
     flex: 1,
   },
   shareBtn: {
@@ -170,11 +170,11 @@ const styles = StyleSheet.create({
   shareBtnText: {
     fontSize: 17,
     fontWeight: "600",
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Lora_600SemiBold",
   },
   skipText: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Lora_400Regular",
     textDecorationLine: "underline",
   },
 });
