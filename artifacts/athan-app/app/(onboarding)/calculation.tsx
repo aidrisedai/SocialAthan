@@ -37,7 +37,7 @@ export default function CalculationScreen() {
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
             <View
               key={i}
-              style={[styles.dot, { backgroundColor: i <= 4 ? colors.primary : colors.border }]}
+              style={[styles.dot, { backgroundColor: i <= 4 ? colors.foreground : colors.border }]}
             />
           ))}
         </View>
@@ -65,8 +65,8 @@ export default function CalculationScreen() {
                 style={[
                   styles.methodCard,
                   {
-                    backgroundColor: selected ? colors.highlight : colors.card,
-                    borderColor: selected ? colors.primary : colors.border,
+                    backgroundColor: selected ? colors.secondary : colors.card,
+                    borderColor: selected ? colors.foreground : colors.border,
                   },
                 ]}
               >
@@ -77,7 +77,7 @@ export default function CalculationScreen() {
                   </Text>
                 </View>
                 {selected && (
-                  <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                  <Ionicons name="checkmark-circle" size={22} color={colors.foreground} />
                 )}
               </Pressable>
             );
@@ -86,7 +86,7 @@ export default function CalculationScreen() {
 
         <Pressable
           onPress={handleContinue}
-          style={[styles.ctaBtn, { backgroundColor: colors.primary }]}
+          style={[styles.ctaBtn, { backgroundColor: colors.foreground }]}
         >
           <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>Continue</Text>
           <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 8,
     marginTop: 4,
   },

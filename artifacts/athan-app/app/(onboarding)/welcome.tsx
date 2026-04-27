@@ -28,8 +28,8 @@ export default function WelcomeScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.iconContainer}>
-          <View style={[styles.iconCircle, { backgroundColor: colors.primary }]}>
-            <Ionicons name="moon" size={48} color={colors.primaryForeground} />
+          <View style={[styles.iconCircle, { backgroundColor: colors.secondary }]}>
+            <Ionicons name="moon" size={48} color={colors.foreground} />
           </View>
         </View>
 
@@ -45,8 +45,8 @@ export default function WelcomeScreen() {
         <View style={styles.features}>
           {FEATURES.map((f) => (
             <View key={f.icon} style={styles.featureRow}>
-              <View style={[styles.featureIcon, { backgroundColor: colors.highlight }]}>
-                <Ionicons name={f.icon} size={24} color={colors.primary} />
+              <View style={[styles.featureIcon, { backgroundColor: colors.secondary }]}>
+                <Ionicons name={f.icon} size={22} color={colors.mutedForeground} />
               </View>
               <Text style={[styles.featureText, { color: colors.foreground }]}>{f.text}</Text>
             </View>
@@ -55,7 +55,7 @@ export default function WelcomeScreen() {
 
         <Pressable
           onPress={() => router.push("/(onboarding)/location")}
-          style={[styles.ctaBtn, { backgroundColor: colors.primary }]}
+          style={[styles.ctaBtn, { backgroundColor: colors.foreground }]}
         >
           <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>Get Started</Text>
           <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 8,
   },
   ctaText: {

@@ -50,6 +50,9 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
       ? colors.cantMakeIt
       : null;
 
+  const cardBg = isNext ? "#252527" : colors.card;
+  const cardBorderColor = isNext ? "rgba(255,255,255,0.15)" : colors.border;
+
   return (
     <Animated.View style={[{ transform: [{ scale }] }]}>
       <Pressable
@@ -57,69 +60,35 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
         style={[
           styles.card,
           {
-            backgroundColor: isNext ? colors.primary : colors.card,
-            borderColor: isNext ? colors.primary : colors.border,
+            backgroundColor: cardBg,
+            borderColor: cardBorderColor,
             borderWidth: 1,
           },
         ]}
       >
+        {isNext && (
+          <View style={styles.nextBadgeRow}>
+            <Text style={styles.nextBadgeText}>NEXT</Text>
+          </View>
+        )}
+
         <View style={styles.topRow}>
           <View style={styles.leftSection}>
-            <Text
-              style={[
-                styles.prayerLabel,
-                {
-                  color: isNext
-                    ? colors.primaryForeground
-                    : colors.mutedForeground,
-                },
-              ]}
-            >
+            <Text style={[styles.prayerLabel, { color: colors.mutedForeground }]}>
               {item.label}
             </Text>
-            <Text
-              style={[
-                styles.adhanTime,
-                {
-                  color: isNext ? colors.primaryForeground : colors.foreground,
-                },
-              ]}
-            >
+            <Text style={[styles.adhanTime, { color: colors.foreground }]}>
               {item.adhan}
             </Text>
-            <Text
-              style={[
-                styles.iqamahTime,
-                {
-                  color: isNext
-                    ? "rgba(255,255,255,0.7)"
-                    : colors.mutedForeground,
-                },
-              ]}
-            >
+            <Text style={[styles.iqamahTime, { color: colors.mutedForeground }]}>
               Iqamah {item.iqamah}
             </Text>
           </View>
 
           <View style={styles.rightSection}>
             {item.completed ? (
-              <View
-                style={[
-                  styles.completedBadge,
-                  {
-                    backgroundColor: isNext
-                      ? "rgba(255,255,255,0.2)"
-                      : colors.highlight,
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="checkmark"
-                  size={20}
-                  color={
-                    isNext ? colors.primaryForeground : colors.primary
-                  }
-                />
+              <View style={[styles.completedBadge, { backgroundColor: colors.secondary }]}>
+                <Ionicons name="checkmark" size={18} color={colors.accent} />
               </View>
             ) : item.rsvp ? (
               <View
@@ -130,32 +99,26 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
               >
                 <Ionicons
                   name={RSVP_ICONS[item.rsvp]}
-                  size={18}
-                  color="#FFFFFF"
+                  size={16}
+                  color={item.rsvp === "going" ? colors.goingForeground : "#FFFFFF"}
                 />
-                <Text style={styles.rsvpText}>{RSVP_LABELS[item.rsvp]}</Text>
+                <Text
+                  style={[
+                    styles.rsvpText,
+                    { color: item.rsvp === "going" ? colors.goingForeground : "#FFFFFF" },
+                  ]}
+                >
+                  {RSVP_LABELS[item.rsvp]}
+                </Text>
               </View>
             ) : (
               <View
                 style={[
                   styles.rsvpCTA,
-                  {
-                    borderColor: isNext
-                      ? "rgba(255,255,255,0.4)"
-                      : colors.border,
-                  },
+                  { borderColor: "rgba(255,255,255,0.2)" },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.rsvpCTAText,
-                    {
-                      color: isNext
-                        ? "rgba(255,255,255,0.85)"
-                        : colors.mutedForeground,
-                    },
-                  ]}
-                >
+                <Text style={[styles.rsvpCTAText, { color: colors.mutedForeground }]}>
                   Set intention
                 </Text>
               </View>
@@ -167,11 +130,7 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
           <View
             style={[
               styles.socialRow,
-              {
-                borderTopColor: isNext
-                  ? "rgba(255,255,255,0.15)"
-                  : colors.border,
-              },
+              { borderTopColor: "rgba(255,255,255,0.07)" },
             ]}
           >
             <View style={styles.avatarRow}>
@@ -181,39 +140,19 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
                   style={[
                     styles.avatar,
                     {
-                      backgroundColor: isNext
-                        ? "rgba(255,255,255,0.3)"
-                        : colors.secondary,
+                      backgroundColor: colors.secondary,
                       marginLeft: i > 0 ? -8 : 0,
                       zIndex: 3 - i,
                     },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.avatarText,
-                      {
-                        color: isNext
-                          ? colors.primaryForeground
-                          : colors.primary,
-                      },
-                    ]}
-                  >
+                  <Text style={[styles.avatarText, { color: colors.foreground }]}>
                     {f.name.charAt(0)}
                   </Text>
                 </View>
               ))}
             </View>
-            <Text
-              style={[
-                styles.socialText,
-                {
-                  color: isNext
-                    ? "rgba(255,255,255,0.8)"
-                    : colors.mutedForeground,
-                },
-              ]}
-            >
+            <Text style={[styles.socialText, { color: colors.mutedForeground }]}>
               {friendsGoing.length > 0
                 ? `${friendsGoing[0].name.split(" ")[0]}${
                     friendsGoing.length > 1
@@ -236,23 +175,35 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     overflow: "hidden",
   },
+  nextBadgeRow: {
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 0,
+  },
+  nextBadgeText: {
+    fontSize: 10,
+    fontFamily: "Inter_600SemiBold",
+    color: "#8E8E93",
+    letterSpacing: 1.2,
+  },
   topRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     padding: 18,
+    paddingTop: 12,
   },
   leftSection: { gap: 2 },
-  rightSection: { alignItems: "flex-end" },
+  rightSection: { alignItems: "flex-end", justifyContent: "center", marginTop: 4 },
   prayerLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "600",
-    letterSpacing: 0.8,
+    letterSpacing: 1,
     textTransform: "uppercase",
     fontFamily: "Inter_600SemiBold",
   },
   adhanTime: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
     marginTop: 4,
     fontFamily: "Inter_700Bold",
@@ -273,20 +224,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
     borderRadius: 20,
   },
   rsvpText: {
     fontSize: 12,
-    color: "#FFFFFF",
     fontWeight: "600",
     fontFamily: "Inter_600SemiBold",
   },
   rsvpCTA: {
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 20,
   },
   rsvpCTAText: {

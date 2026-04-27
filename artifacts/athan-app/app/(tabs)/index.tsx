@@ -89,17 +89,17 @@ export default function HomeScreen() {
             onPress={() => router.push("/masjid-select")}
             style={[styles.masjidBtn, { backgroundColor: colors.secondary }]}
           >
-            <Ionicons name="location-outline" size={18} color={colors.primary} />
+            <Ionicons name="location-outline" size={18} color={colors.mutedForeground} />
           </Pressable>
         </View>
 
         {!primaryMasjid && (
           <Pressable
             onPress={() => router.push("/masjid-select")}
-            style={[styles.noMasjidBanner, { backgroundColor: colors.highlight, borderColor: colors.primary }]}
+            style={[styles.noMasjidBanner, { backgroundColor: colors.secondary, borderColor: colors.border }]}
           >
-            <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
-            <Text style={[styles.noMasjidText, { color: colors.primary }]}>
+            <Ionicons name="information-circle-outline" size={18} color={colors.mutedForeground} />
+            <Text style={[styles.noMasjidText, { color: colors.foreground }]}>
               Tap to select your primary masjid
             </Text>
           </Pressable>
@@ -163,6 +163,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "Inter_400Regular",
     marginBottom: 2,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   masjidName: {
     fontSize: 20,
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(0,0,0,0.6)",
   },
   sheetContainer: {
     borderTopLeftRadius: 24,

@@ -47,12 +47,12 @@ export default function InviteScreen() {
       <View style={styles.inner}>
         <View style={styles.progress}>
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} style={[styles.dot, { backgroundColor: colors.primary }]} />
+            <View key={i} style={[styles.dot, { backgroundColor: colors.foreground }]} />
           ))}
         </View>
 
-        <View style={[styles.iconCircle, { backgroundColor: colors.highlight }]}>
-          <Ionicons name="heart" size={44} color={colors.primary} />
+        <View style={[styles.iconCircle, { backgroundColor: colors.secondary }]}>
+          <Ionicons name="heart" size={44} color={colors.foreground} />
         </View>
 
         <View style={styles.textBlock}>
@@ -73,7 +73,7 @@ export default function InviteScreen() {
             { icon: "chatbubble-outline" as const, text: "Coordinate and encourage each other" },
           ].map((b) => (
             <View key={b.text} style={[styles.benefit, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Ionicons name={b.icon} size={18} color={colors.primary} />
+              <Ionicons name={b.icon} size={18} color={colors.mutedForeground} />
               <Text style={[styles.benefitText, { color: colors.foreground }]}>{b.text}</Text>
             </View>
           ))}
@@ -81,7 +81,7 @@ export default function InviteScreen() {
 
         <Pressable
           onPress={handleShare}
-          style={[styles.shareBtn, { backgroundColor: colors.primary }]}
+          style={[styles.shareBtn, { backgroundColor: colors.foreground }]}
         >
           <Ionicons name="share-outline" size={20} color={colors.primaryForeground} />
           <Text style={[styles.shareBtnText, { color: colors.primaryForeground }]}>
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 8,
     width: "100%",
   },

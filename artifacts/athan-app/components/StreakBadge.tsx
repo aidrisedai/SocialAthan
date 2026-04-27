@@ -25,10 +25,10 @@ export function StreakBadge({ streak, compact }: Props) {
   if (compact) {
     return (
       <View style={[styles.compactContainer, { backgroundColor: isActive ? colors.highlight : colors.secondary }]}>
-        <Text style={[styles.compactCount, { color: isActive ? colors.primary : colors.mutedForeground }]}>
+        <Text style={[styles.compactCount, { color: isActive ? colors.going : colors.mutedForeground }]}>
           {streak.count}
         </Text>
-        <Ionicons name="flame" size={16} color={isActive ? colors.streak : colors.mutedForeground} />
+        <Ionicons name="flame" size={14} color={isActive ? colors.streak : colors.mutedForeground} />
       </View>
     );
   }
@@ -47,7 +47,7 @@ export function StreakBadge({ streak, compact }: Props) {
         <View style={styles.countSection}>
           <Ionicons
             name="flame"
-            size={22}
+            size={20}
             color={isActive ? colors.streak : colors.mutedForeground}
           />
           <Text style={[styles.count, { color: isActive ? colors.foreground : colors.mutedForeground }]}>
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   info: {
-    gap: 2,
+    gap: 3,
   },
   label: {
     fontSize: 16,

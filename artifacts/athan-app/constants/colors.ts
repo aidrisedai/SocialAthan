@@ -1,48 +1,51 @@
+const darkPalette = {
+  text: "#FFFFFF",
+  tint: "#FFFFFF",
+
+  background: "#0D0D0D",
+  foreground: "#FFFFFF",
+
+  card: "#1C1C1E",
+  cardForeground: "#FFFFFF",
+
+  primary: "#FFFFFF",
+  primaryForeground: "#0D0D0D",
+
+  secondary: "#2A2A2A",
+  secondaryForeground: "#FFFFFF",
+
+  muted: "#1C1C1E",
+  mutedForeground: "#8E8E93",
+
+  accent: "#30D158",
+  accentForeground: "#0D0D0D",
+
+  going: "#30D158",
+  goingForeground: "#0D0D0D",
+  maybe: "#FF9F0A",
+  maybeForeground: "#0D0D0D",
+  cantMakeIt: "#FF453A",
+  cantMakeItForeground: "#FFFFFF",
+
+  destructive: "#FF453A",
+  destructiveForeground: "#FFFFFF",
+
+  border: "#2A2A2A",
+  input: "#2A2A2A",
+
+  highlight: "#1A2A1C",
+  highlightForeground: "#30D158",
+
+  surface: "#1C1C1E",
+  surfaceForeground: "#FFFFFF",
+
+  streak: "#FF9F0A",
+  streakForeground: "#FFFFFF",
+};
+
 const colors = {
-  light: {
-    text: "#1A2E2A",
-    tint: "#1B6B5B",
-
-    background: "#F7F5F2",
-    foreground: "#1A2E2A",
-
-    card: "#FFFFFF",
-    cardForeground: "#1A2E2A",
-
-    primary: "#1B6B5B",
-    primaryForeground: "#FFFFFF",
-
-    secondary: "#EDF3F1",
-    secondaryForeground: "#1A2E2A",
-
-    muted: "#EDF3F1",
-    mutedForeground: "#7A9690",
-
-    accent: "#2E9E82",
-    accentForeground: "#FFFFFF",
-
-    going: "#1B6B5B",
-    goingForeground: "#FFFFFF",
-    maybe: "#B87333",
-    maybeForeground: "#FFFFFF",
-    cantMakeIt: "#C45858",
-    cantMakeItForeground: "#FFFFFF",
-
-    destructive: "#C45858",
-    destructiveForeground: "#FFFFFF",
-
-    border: "#E0EAE7",
-    input: "#E0EAE7",
-
-    highlight: "#F0FAF6",
-    highlightForeground: "#1B6B5B",
-
-    surface: "#FFFFFF",
-    surfaceForeground: "#1A2E2A",
-
-    streak: "#E8A020",
-    streakForeground: "#FFFFFF",
-  },
+  light: darkPalette,
+  dark: darkPalette,
   radius: 12,
 };
 

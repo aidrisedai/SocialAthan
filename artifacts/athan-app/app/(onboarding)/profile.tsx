@@ -47,7 +47,7 @@ export default function ProfileScreen() {
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
             <View
               key={i}
-              style={[styles.dot, { backgroundColor: i <= 3 ? colors.primary : colors.border }]}
+              style={[styles.dot, { backgroundColor: i <= 3 ? colors.foreground : colors.border }]}
             />
           ))}
         </View>
@@ -61,7 +61,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[styles.inputContainer, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
           <Ionicons name="person-outline" size={20} color={colors.mutedForeground} />
           <TextInput
             style={[styles.input, { color: colors.foreground }]}
@@ -74,11 +74,11 @@ export default function ProfileScreen() {
           />
         </View>
 
-        <View style={[styles.usernameCard, { backgroundColor: colors.highlight }]}>
+        <View style={[styles.usernameCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.usernameLabel, { color: colors.mutedForeground }]}>
             Your auto-assigned username
           </Text>
-          <Text style={[styles.username, { color: colors.primary }]}>@{defaultUsername}</Text>
+          <Text style={[styles.username, { color: colors.foreground }]}>@{defaultUsername}</Text>
           <Text style={[styles.usernameNote, { color: colors.mutedForeground }]}>
             You can change this later in settings
           </Text>
@@ -86,7 +86,7 @@ export default function ProfileScreen() {
 
         <Pressable
           onPress={handleContinue}
-          style={[styles.ctaBtn, { backgroundColor: colors.primary }]}
+          style={[styles.ctaBtn, { backgroundColor: colors.foreground }]}
         >
           <Text style={[styles.ctaText, { color: colors.primaryForeground }]}>Continue</Text>
           <Ionicons name="arrow-forward" size={20} color={colors.primaryForeground} />
@@ -142,13 +142,14 @@ const styles = StyleSheet.create({
   usernameCard: {
     padding: 18,
     borderRadius: 14,
+    borderWidth: 1,
     gap: 4,
   },
   usernameLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Inter_500Medium",
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 1,
   },
   username: {
     fontSize: 20,
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 8,
   },
   ctaText: {

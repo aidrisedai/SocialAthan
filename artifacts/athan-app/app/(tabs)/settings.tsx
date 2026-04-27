@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from "react-native";
@@ -49,8 +48,8 @@ export default function SettingsScreen() {
         <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
 
         <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.avatarText, { color: colors.primaryForeground }]}>
+          <View style={[styles.avatar, { backgroundColor: colors.secondary }]}>
+            <Text style={[styles.avatarText, { color: colors.foreground }]}>
               {(user?.name || "U").charAt(0)}
             </Text>
           </View>
@@ -62,8 +61,8 @@ export default function SettingsScreen() {
               @{user?.username || "user"}
             </Text>
           </View>
-          <Pressable style={[styles.editBtn, { backgroundColor: colors.secondary }]}>
-            <Ionicons name="pencil-outline" size={16} color={colors.primary} />
+          <Pressable style={[styles.editBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+            <Ionicons name="pencil-outline" size={16} color={colors.mutedForeground} />
           </Pressable>
         </View>
 
@@ -72,7 +71,7 @@ export default function SettingsScreen() {
           onPress={() => router.push("/masjid-select")}
           style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
-          <Ionicons name="location-outline" size={20} color={colors.primary} />
+          <Ionicons name="location-outline" size={20} color={colors.mutedForeground} />
           <View style={styles.rowText}>
             <Text style={[styles.rowLabel, { color: colors.foreground }]}>Primary Masjid</Text>
             <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
@@ -87,7 +86,7 @@ export default function SettingsScreen() {
             onPress={() => router.push({ pathname: "/admin-portal", params: { masjidId: primaryMasjid?.id ?? "" } })}
             style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
           >
-            <Ionicons name="shield-outline" size={20} color={colors.primary} />
+            <Ionicons name="shield-outline" size={20} color={colors.mutedForeground} />
             <View style={styles.rowText}>
               <Text style={[styles.rowLabel, { color: colors.foreground }]}>Masjid Admin Portal</Text>
               <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>Manage times</Text>
@@ -104,7 +103,7 @@ export default function SettingsScreen() {
                 key={m.id}
                 style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
               >
-                <Ionicons name="bookmark-outline" size={20} color={colors.primary} />
+                <Ionicons name="bookmark-outline" size={20} color={colors.mutedForeground} />
                 <View style={styles.rowText}>
                   <Text style={[styles.rowLabel, { color: colors.foreground }]} numberOfLines={1}>{m.name}</Text>
                   <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>{m.address}</Text>
@@ -126,7 +125,7 @@ export default function SettingsScreen() {
           onPress={() => router.push("/notification-settings")}
           style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
-          <Ionicons name="notifications-outline" size={20} color={colors.primary} />
+          <Ionicons name="notifications-outline" size={20} color={colors.mutedForeground} />
           <View style={styles.rowText}>
             <Text style={[styles.rowLabel, { color: colors.foreground }]}>Notification Settings</Text>
             <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
@@ -141,7 +140,7 @@ export default function SettingsScreen() {
           onPress={() => router.push("/calculation-method")}
           style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
-          <Ionicons name="calculator-outline" size={20} color={colors.primary} />
+          <Ionicons name="calculator-outline" size={20} color={colors.mutedForeground} />
           <View style={styles.rowText}>
             <Text style={[styles.rowLabel, { color: colors.foreground }]}>Calculation Method</Text>
             <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
@@ -156,7 +155,7 @@ export default function SettingsScreen() {
           onPress={() => router.push("/adhan-audio")}
           style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
-          <Ionicons name="volume-high-outline" size={20} color={colors.primary} />
+          <Ionicons name="volume-high-outline" size={20} color={colors.mutedForeground} />
           <View style={styles.rowText}>
             <Text style={[styles.rowLabel, { color: colors.foreground }]}>Adhan Reciter</Text>
             <Text style={[styles.rowValue, { color: colors.mutedForeground }]}>
@@ -189,22 +188,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Inter_600SemiBold",
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 1,
   },
   sectionSubLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: "Inter_600SemiBold",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 6,
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
   },
   profileCard: {
     flexDirection: "row",
@@ -246,12 +245,7 @@ const styles = StyleSheet.create({
     borderRadius: 17,
     alignItems: "center",
     justifyContent: "center",
-  },
-  section: {
-    marginHorizontal: 16,
-    borderRadius: 16,
     borderWidth: 1,
-    overflow: "hidden",
   },
   row: {
     flexDirection: "row",
@@ -271,24 +265,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Inter_500Medium",
   },
-  rowLabelSmall: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    flex: 1,
-  },
   rowValue: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
-  },
-  switchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  divider: {
-    height: 1,
-    marginHorizontal: 16,
   },
   footer: {
     padding: 24,

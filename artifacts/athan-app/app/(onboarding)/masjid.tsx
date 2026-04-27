@@ -35,9 +35,9 @@ export default function MasjidSelectionScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View style={styles.progress}>
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
+          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
+          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
+          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
           <View style={[styles.dot, { backgroundColor: colors.border }]} />
           <View style={[styles.dot, { backgroundColor: colors.border }]} />
         </View>
@@ -59,51 +59,31 @@ export default function MasjidSelectionScreen() {
               style={[
                 styles.masjidCard,
                 {
-                  backgroundColor: isSelected ? colors.primary : colors.card,
-                  borderColor: isSelected ? colors.primary : colors.border,
+                  backgroundColor: isSelected ? colors.secondary : colors.card,
+                  borderColor: isSelected ? colors.foreground : colors.border,
                 },
               ]}
             >
               <View style={styles.masjidLeft}>
-                <Text
-                  style={[
-                    styles.masjidName,
-                    { color: isSelected ? colors.primaryForeground : colors.foreground },
-                  ]}
-                >
+                <Text style={[styles.masjidName, { color: colors.foreground }]}>
                   {masjid.name}
                 </Text>
-                <Text
-                  style={[
-                    styles.masjidAddress,
-                    { color: isSelected ? "rgba(255,255,255,0.75)" : colors.mutedForeground },
-                  ]}
-                >
+                <Text style={[styles.masjidAddress, { color: colors.mutedForeground }]}>
                   {masjid.address}
                 </Text>
                 <View style={styles.metaRow}>
                   {masjid.distance !== undefined && (
-                    <Text
-                      style={[
-                        styles.distance,
-                        { color: isSelected ? "rgba(255,255,255,0.75)" : colors.mutedForeground },
-                      ]}
-                    >
+                    <Text style={[styles.distance, { color: colors.mutedForeground }]}>
                       {masjid.distance} mi
                     </Text>
                   )}
-                  <Text
-                    style={[
-                      styles.members,
-                      { color: isSelected ? "rgba(255,255,255,0.75)" : colors.mutedForeground },
-                    ]}
-                  >
+                  <Text style={[styles.members, { color: colors.mutedForeground }]}>
                     {masjid.memberCount} members
                   </Text>
                 </View>
               </View>
               {isSelected && (
-                <Ionicons name="checkmark-circle" size={24} color={colors.primaryForeground} />
+                <Ionicons name="checkmark-circle" size={24} color={colors.foreground} />
               )}
             </Pressable>
           );
@@ -116,8 +96,8 @@ export default function MasjidSelectionScreen() {
           style={[
             styles.ctaBtn,
             {
-              backgroundColor: selected ? colors.primary : colors.secondary,
-              opacity: selected ? 1 : 0.6,
+              backgroundColor: selected ? colors.foreground : colors.secondary,
+              opacity: selected ? 1 : 0.5,
             },
           ]}
           disabled={!selected}
@@ -208,7 +188,7 @@ const styles = StyleSheet.create({
   },
   ctaBtn: {
     paddingVertical: 16,
-    borderRadius: 16,
+    borderRadius: 50,
     alignItems: "center",
   },
   ctaText: {

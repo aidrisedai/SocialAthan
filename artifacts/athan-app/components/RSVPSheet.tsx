@@ -66,7 +66,7 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
-      <View style={styles.handle} />
+      <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
       <View style={styles.header}>
         <Text style={[styles.prayerName, { color: colors.foreground }]}>{prayerLabel}</Text>
@@ -79,6 +79,51 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
         {OPTIONS.map((opt) => {
           const isSelected = currentRSVP === opt.status;
           const optColor = optionColors[opt.status as NonNullable<RSVPStatus>];
+
+          if (opt.status === "going") {
+            return (
+              <Pressable
+                key={String(opt.status)}
+                onPress={() => handleSelect(opt.status)}
+                style={[
+                  styles.option,
+                  {
+                    backgroundColor: isSelected ? colors.going : colors.secondary,
+                    borderWidth: isSelected ? 0 : 1,
+                    borderColor: isSelected ? "transparent" : colors.border,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={opt.icon}
+                  size={24}
+                  color={isSelected ? colors.goingForeground : colors.going}
+                />
+                <View style={styles.optionText}>
+                  <Text
+                    style={[
+                      styles.optionLabel,
+                      { color: isSelected ? colors.goingForeground : colors.foreground },
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.optionSublabel,
+                      { color: isSelected ? "rgba(0,0,0,0.5)" : colors.mutedForeground },
+                    ]}
+                  >
+                    {opt.sublabel}
+                  </Text>
+                </View>
+                {isSelected && (
+                  <Ionicons name="checkmark" size={18} color={colors.goingForeground} />
+                )}
+              </Pressable>
+            );
+          }
+
           return (
             <Pressable
               key={String(opt.status)}
@@ -86,15 +131,15 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
               style={[
                 styles.option,
                 {
-                  backgroundColor: isSelected ? optColor : colors.secondary,
-                  borderColor: isSelected ? optColor : "transparent",
-                  borderWidth: 2,
+                  backgroundColor: isSelected ? optColor : "transparent",
+                  borderWidth: 1,
+                  borderColor: isSelected ? optColor : colors.border,
                 },
               ]}
             >
               <Ionicons
                 name={opt.icon}
-                size={26}
+                size={24}
                 color={isSelected ? "#FFF" : optColor}
               />
               <View style={styles.optionText}>
@@ -109,13 +154,13 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
                 <Text
                   style={[
                     styles.optionSublabel,
-                    { color: isSelected ? "rgba(255,255,255,0.75)" : colors.mutedForeground },
+                    { color: isSelected ? "rgba(255,255,255,0.65)" : colors.mutedForeground },
                   ]}
                 >
                   {opt.sublabel}
                 </Text>
               </View>
-              {isSelected && <Ionicons name="checkmark" size={20} color="#FFF" />}
+              {isSelected && <Ionicons name="checkmark" size={18} color="#FFF" />}
             </Pressable>
           );
         })}
@@ -141,7 +186,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: "#E0E0E0",
     alignSelf: "center",
     marginTop: 12,
   },
@@ -167,7 +211,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 14,
   },
   optionText: {

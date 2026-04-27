@@ -30,7 +30,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
         onPress={onViewProfile ? () => onViewProfile(friend) : undefined}
       >
         <View style={[styles.avatar, { backgroundColor: colors.secondary }]}>
-          <Text style={[styles.avatarText, { color: colors.primary }]}>
+          <Text style={[styles.avatarText, { color: colors.foreground }]}>
             {friend.name.charAt(0)}
           </Text>
         </View>
@@ -41,7 +41,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
           </Text>
           {prayerLabel && (
             <View style={[styles.goingBadge, { backgroundColor: colors.highlight }]}>
-              <Ionicons name="checkmark-circle" size={12} color={colors.going} />
+              <Ionicons name="checkmark-circle" size={11} color={colors.going} />
               <Text style={[styles.goingText, { color: colors.going }]}>
                 Going to {prayerLabel}
               </Text>
@@ -57,7 +57,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
               }}
               style={[styles.actionBtn, { backgroundColor: colors.secondary }]}
             >
-              <Ionicons name="hand-left-outline" size={16} color={colors.primary} />
+              <Ionicons name="hand-left-outline" size={16} color={colors.mutedForeground} />
             </Pressable>
           )}
           {onMessage && (
@@ -68,7 +68,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
               }}
               style={[styles.actionBtn, { backgroundColor: colors.secondary }]}
             >
-              <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
+              <Ionicons name="chatbubble-outline" size={16} color={colors.mutedForeground} />
             </Pressable>
           )}
         </View>
@@ -84,7 +84,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onViewProfile, onNud
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 onDua?.(friend, dua);
               }}
-              style={[styles.duaChip, { backgroundColor: colors.secondary }]}
+              style={[styles.duaChip, { backgroundColor: colors.secondary, borderColor: colors.border }]}
             >
               <Text style={[styles.duaText, { color: colors.foreground }]}>{dua}</Text>
             </Pressable>
@@ -173,13 +173,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontFamily: "Inter_600SemiBold",
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
     marginBottom: 2,
   },
   duaChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+    borderWidth: 1,
   },
   duaText: {
     fontSize: 12,

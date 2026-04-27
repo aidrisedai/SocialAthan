@@ -38,10 +38,10 @@ export default function StreaksScreen() {
             <Text style={[styles.title, { color: colors.foreground }]}>Streaks</Text>
             <Pressable
               onPress={() => router.push("/streak-detail")}
-              style={[styles.detailBtn, { backgroundColor: colors.secondary }]}
+              style={[styles.detailBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
             >
-              <Text style={[styles.detailBtnText, { color: colors.primary }]}>Detail</Text>
-              <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+              <Text style={[styles.detailBtnText, { color: colors.mutedForeground }]}>Detail</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.mutedForeground} />
             </Pressable>
           </View>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
@@ -50,10 +50,10 @@ export default function StreaksScreen() {
         </View>
 
         <View style={styles.summaryRow}>
-          <View style={[styles.summaryCard, { backgroundColor: colors.primary }]}>
-            <Ionicons name="flame" size={22} color={colors.primaryForeground} />
-            <Text style={[styles.summaryCount, { color: colors.primaryForeground }]}>{topStreak}</Text>
-            <Text style={[styles.summaryLabel, { color: "rgba(255,255,255,0.75)" }]}>Best streak</Text>
+          <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}>
+            <Ionicons name="flame" size={22} color={colors.streak} />
+            <Text style={[styles.summaryCount, { color: colors.foreground }]}>{topStreak}</Text>
+            <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>Best streak</Text>
           </View>
           <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}>
             <Ionicons name="checkmark-circle" size={22} color={colors.accent} />
@@ -62,8 +62,8 @@ export default function StreaksScreen() {
           </View>
         </View>
 
-        <View style={[styles.affirmationBanner, { backgroundColor: colors.highlight }]}>
-          <Text style={[styles.affirmationText, { color: colors.primary }]}>
+        <View style={[styles.affirmationBanner, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}>
+          <Text style={[styles.affirmationText, { color: colors.foreground }]}>
             {topStreak >= 7
               ? `${topStreak} days of Fajr in jama'ah, Alhamdulillah`
               : topStreak >= 3
@@ -106,14 +106,15 @@ const styles = StyleSheet.create({
   detailBtn: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 20,
+    borderWidth: 1,
     gap: 4,
   },
   detailBtnText: {
     fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
+    fontFamily: "Inter_500Medium",
   },
   title: {
     fontSize: 28,
@@ -145,6 +146,8 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 12,
     fontFamily: "Inter_500Medium",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   affirmationBanner: {
     marginHorizontal: 16,
@@ -158,12 +161,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   sectionLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Inter_600SemiBold",
     paddingHorizontal: 20,
     paddingBottom: 8,
     textTransform: "uppercase",
-    letterSpacing: 0.8,
+    letterSpacing: 1,
   },
   privacyNote: {
     flexDirection: "row",

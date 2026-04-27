@@ -37,15 +37,15 @@ export default function LocationScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.progress}>
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
+          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
+          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
           <View style={[styles.dot, { backgroundColor: colors.border }]} />
           <View style={[styles.dot, { backgroundColor: colors.border }]} />
           <View style={[styles.dot, { backgroundColor: colors.border }]} />
         </View>
 
-        <View style={[styles.iconCircle, { backgroundColor: colors.highlight }]}>
-          <Ionicons name="location" size={42} color={colors.primary} />
+        <View style={[styles.iconCircle, { backgroundColor: colors.secondary }]}>
+          <Ionicons name="location" size={42} color={colors.foreground} />
         </View>
 
         <View style={styles.textBlock}>
@@ -59,7 +59,7 @@ export default function LocationScreen() {
 
         <Pressable
           onPress={requestLocation}
-          style={[styles.ctaBtn, { backgroundColor: colors.primary, opacity: requesting ? 0.7 : 1 }]}
+          style={[styles.ctaBtn, { backgroundColor: colors.foreground, opacity: requesting ? 0.7 : 1 }]}
           disabled={requesting}
         >
           <Ionicons name="location-outline" size={20} color={colors.primaryForeground} />
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 8,
     width: "100%",
   },

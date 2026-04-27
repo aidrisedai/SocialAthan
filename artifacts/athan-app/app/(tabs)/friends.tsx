@@ -92,16 +92,16 @@ export default function FriendsScreen() {
           <Text style={[styles.title, { color: colors.foreground }]}>Friends</Text>
           <Pressable
             onPress={handleAddFriend}
-            style={[styles.addBtn, { backgroundColor: colors.primary }]}
+            style={[styles.addBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
           >
-            <Ionicons name="person-add-outline" size={18} color={colors.primaryForeground} />
+            <Ionicons name="person-add-outline" size={18} color={colors.foreground} />
           </Pressable>
         </View>
 
         <View
           style={[
             styles.searchContainer,
-            { backgroundColor: colors.card, borderColor: colors.border },
+            { backgroundColor: colors.secondary, borderColor: colors.border },
           ]}
         >
           <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
@@ -129,15 +129,17 @@ export default function FriendsScreen() {
               }}
               style={[
                 styles.tabChip,
-                { backgroundColor: activeTab === tab ? colors.primary : colors.secondary },
+                {
+                  backgroundColor: activeTab === tab ? colors.foreground : colors.secondary,
+                  borderColor: activeTab === tab ? colors.foreground : colors.border,
+                },
               ]}
             >
               <Text
                 style={[
                   styles.tabText,
                   {
-                    color:
-                      activeTab === tab ? colors.primaryForeground : colors.mutedForeground,
+                    color: activeTab === tab ? colors.primaryForeground : colors.mutedForeground,
                   },
                 ]}
               >
@@ -170,7 +172,7 @@ export default function FriendsScreen() {
                 </Text>
                 <Pressable
                   onPress={() => router.push("/friend-discover")}
-                  style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
+                  style={[styles.inviteBtn, { backgroundColor: colors.foreground }]}
                 >
                   <Text style={[styles.inviteBtnText, { color: colors.primaryForeground }]}>
                     Invite Friends
@@ -220,9 +222,9 @@ export default function FriendsScreen() {
                         return (
                           <View key={pt.prayer} style={styles.aggregateRow}>
                             <Text style={[styles.aggregatePrayer, { color: colors.foreground }]}>{pt.label}</Text>
-                            <View style={[styles.aggregatePill, { backgroundColor: colors.highlight }]}>
-                              <Ionicons name="people-outline" size={11} color={colors.primary} />
-                              <Text style={[styles.aggregateCount, { color: colors.primary }]}>{count}</Text>
+                            <View style={[styles.aggregatePill, { backgroundColor: colors.secondary }]}>
+                              <Ionicons name="people-outline" size={11} color={colors.mutedForeground} />
+                              <Text style={[styles.aggregateCount, { color: colors.mutedForeground }]}>{count}</Text>
                             </View>
                           </View>
                         );
@@ -236,21 +238,21 @@ export default function FriendsScreen() {
                     onPress={() => router.push("/invite-link")}
                     style={[styles.emptyActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
                   >
-                    <Ionicons name="logo-whatsapp" size={18} color={colors.primary} />
+                    <Ionicons name="logo-whatsapp" size={18} color={colors.mutedForeground} />
                     <Text style={[styles.emptyActionText, { color: colors.foreground }]}>WhatsApp / SMS</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => router.push("/qr-scan")}
                     style={[styles.emptyActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
                   >
-                    <Ionicons name="qr-code-outline" size={18} color={colors.primary} />
+                    <Ionicons name="qr-code-outline" size={18} color={colors.mutedForeground} />
                     <Text style={[styles.emptyActionText, { color: colors.foreground }]}>Scan QR Code</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => router.push("/friend-search")}
                     style={[styles.emptyActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
                   >
-                    <Ionicons name="search-outline" size={18} color={colors.primary} />
+                    <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
                     <Text style={[styles.emptyActionText, { color: colors.foreground }]}>Find by Username</Text>
                   </Pressable>
                 </View>
@@ -283,8 +285,8 @@ export default function FriendsScreen() {
                   { backgroundColor: colors.card, borderColor: colors.border },
                 ]}
               >
-                <View style={[styles.discoverIconCircle, { backgroundColor: colors.highlight }]}>
-                  <Ionicons name={item.icon} size={22} color={colors.primary} />
+                <View style={[styles.discoverIconCircle, { backgroundColor: colors.secondary }]}>
+                  <Ionicons name={item.icon} size={22} color={colors.mutedForeground} />
                 </View>
                 <View style={styles.discoverText}>
                   <Text style={[styles.discoverLabel, { color: colors.foreground }]}>
@@ -327,6 +329,7 @@ const styles = StyleSheet.create({
     borderRadius: 19,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
   },
   searchContainer: {
     flexDirection: "row",
@@ -348,6 +351,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 8,
+    borderWidth: 1,
   },
   tabText: {
     fontSize: 13,
@@ -355,13 +359,13 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontFamily: "Inter_500Medium",
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 4,
     textTransform: "uppercase",
-    letterSpacing: 0.6,
+    letterSpacing: 0.8,
   },
   emptyState: {
     alignItems: "center",
@@ -382,9 +386,9 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   inviteBtn: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
+    paddingHorizontal: 28,
+    paddingVertical: 14,
+    borderRadius: 50,
     marginTop: 8,
   },
   inviteBtnText: {

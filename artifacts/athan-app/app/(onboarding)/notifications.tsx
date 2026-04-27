@@ -58,12 +58,12 @@ export default function NotificationsScreen() {
       <View style={styles.inner}>
         <View style={styles.progress}>
           {PROGRESS_DOTS.map((i) => (
-            <View key={i} style={[styles.dot, { backgroundColor: colors.primary }]} />
+            <View key={i} style={[styles.dot, { backgroundColor: colors.foreground }]} />
           ))}
         </View>
 
-        <View style={[styles.iconCircle, { backgroundColor: colors.highlight }]}>
-          <Ionicons name="notifications" size={42} color={colors.primary} />
+        <View style={[styles.iconCircle, { backgroundColor: colors.secondary }]}>
+          <Ionicons name="notifications" size={42} color={colors.foreground} />
         </View>
 
         <View style={styles.textBlock}>
@@ -85,7 +85,7 @@ export default function NotificationsScreen() {
                 { backgroundColor: colors.card, borderColor: colors.border },
               ]}
             >
-              <Ionicons name={f.icon} size={24} color={colors.primary} />
+              <Ionicons name={f.icon} size={24} color={colors.mutedForeground} />
               <Text style={[styles.featureText, { color: colors.foreground }]}>{f.text}</Text>
             </View>
           ))}
@@ -93,7 +93,7 @@ export default function NotificationsScreen() {
 
         <Pressable
           onPress={requestNotifications}
-          style={[styles.ctaBtn, { backgroundColor: colors.primary, opacity: requesting ? 0.7 : 1 }]}
+          style={[styles.ctaBtn, { backgroundColor: colors.foreground, opacity: requesting ? 0.7 : 1 }]}
           disabled={requesting}
         >
           <Ionicons name="notifications-outline" size={20} color={colors.primaryForeground} />
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 16,
     paddingHorizontal: 32,
-    borderRadius: 16,
+    borderRadius: 50,
     gap: 8,
     width: "100%",
   },
