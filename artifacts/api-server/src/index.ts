@@ -6,6 +6,7 @@ import { db } from "@workspace/db";
 import { athanUsers } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { registerWsClient } from "./lib/wsManager";
+import { ensureSchema } from "./lib/ensureSchema";
 
 const rawPort = process.env["PORT"];
 
@@ -49,6 +50,12 @@ wss.on("connection", async (ws, req) => {
   }
 });
 
-server.listen(port, () => {
-  logger.info({ port }, "Server listening");
-});
+ensureSchema()
+  .catch((err) => {
+    logger.error({ err }, "ensureSchema failed — server will start but DB writes may fail");
+  })
+  .finally(() => {
+    server.listen(port, () => {
+      logger.info({ port }, "Server listening");
+    });
+  });

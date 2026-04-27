@@ -3,12 +3,20 @@ import { db } from "@workspace/db";
 import { athanUsers } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { requireAuth, type AuthRequest } from "../middlewares/auth";
+import { logger } from "../lib/logger";
 import crypto from "crypto";
 
 const router = Router();
 
 function genId() {
   return crypto.randomUUID();
+}
+
+function errInfo(err: unknown) {
+  if (err instanceof Error) {
+    return { message: err.message, name: err.name, stack: err.stack };
+  }
+  return { message: String(err) };
 }
 
 router.post("/auth/register", async (req, res) => {
@@ -51,7 +59,17 @@ router.post("/auth/register", async (req, res) => {
       user: { id: user.id, name: user.name, username: user.username },
       authToken: user.authToken,
     });
-  } catch {
+  } catch (err) {
+    logger.error({ err: errInfo(err), username: trimmed }, "Registration failed");
+    const dbCode = (err as { code?: string })?.code;
+    if (dbCode === "23505") {
+      res.status(409).json({ error: "Username already taken" });
+      return;
+    }
+    if (dbCode === "42P01") {
+      res.status(503).json({ error: "Database not initialized — schema missing. Try again shortly." });
+      return;
+    }
     res.status(500).json({ error: "Registration failed" });
   }
 });
@@ -68,7 +86,8 @@ router.get("/auth/me", requireAuth, async (req: AuthRequest, res) => {
       return;
     }
     res.json({ user: rows[0] });
-  } catch {
+  } catch (err) {
+    logger.error({ err: errInfo(err) }, "Failed to fetch user");
     res.status(500).json({ error: "Failed to fetch user" });
   }
 });
@@ -86,7 +105,8 @@ router.get("/users/by-username/:username", requireAuth, async (req: AuthRequest,
       return;
     }
     res.json({ user: rows[0] });
-  } catch {
+  } catch (err) {
+    logger.error({ err: errInfo(err), username }, "Failed to fetch user by username");
     res.status(500).json({ error: "Failed to fetch user" });
   }
 });
