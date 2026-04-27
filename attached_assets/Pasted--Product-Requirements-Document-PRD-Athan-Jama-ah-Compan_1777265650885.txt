@@ -1,0 +1,349 @@
+# Product Requirements Document (PRD)
+## Athan + Jama'ah Companion App — v1
+
+**Author:** [Founder]
+**Status:** Draft for Design Team
+**Last updated:** April 26, 2026
+**Target ship date:** ASAP (~3 months from kickoff)
+
+---
+
+## 1. Vision & North Star
+
+Praying in congregation (jama'ah) carries 27 times the reward of praying alone. Yet for many Muslims, the gap between the *intention* to attend the masjid and the *act* of going is wide. Distractions, isolation, and the lack of a connected community can make showing up harder than it should be.
+
+This app helps Muslims close that gap by leveraging brotherhood and sisterhood — the social fabric of the ummah — to gently encourage one another toward consistent attendance at the five daily prayers.
+
+**North Star:** Help Muslims attend the masjid more often by capturing the spiritual and social pull of jama'ah.
+
+**Primary success metric:** Total number of confirmed "going" RSVPs across the user base trends up over time.
+
+**Project ethos:** This product is built as **sadaqah jariyah**. It is free, ad-free, and will never sell user data. Optional subscriptions may be introduced in the future, but v1 is fully free.
+
+---
+
+## 2. Target Users
+
+### 2.1 Primary Persona: The Aspiring Regular
+Any Muslim — practicing, returning, or growing — who wants to be present at the masjid for the five daily prayers and would benefit from social encouragement to do so. The app is *not* gated to a particular level of religiosity; it is for anyone with the niyyah (intention) to attend.
+
+### 2.2 Secondary Persona: The Masjid Admin
+A representative of a masjid (imam, board member, or designated volunteer) who maintains the masjid's official Adhan and Iqamah times within the app. Multiple admins per masjid are supported.
+
+### 2.3 Tertiary Persona: The Super Admin
+Internal team role responsible for backend management — primarily verifying admin claims and updating times for unclaimed masjids when needed.
+
+---
+
+## 3. Core Principles & Anti-Goals
+
+The design team should treat the following as guardrails. When in doubt, defer to the spirit of these principles.
+
+### 3.1 Principles
+- **Ibadah first, engagement second.** This is a tool that serves worship, not the other way around.
+- **Asymmetric social visibility.** Positive intentions are celebrated; non-attendance is private. Only "Going" RSVPs are visible to friends. "Maybe" and "Can't make it" responses are never shared with anyone.
+- **Trust the user.** The app does not verify attendance. Allah knows the niyyah; the app does not need to police it.
+- **Lean v1.** This app does one thing well: prayer times + Adhan + RSVP/social layer. Nothing else.
+- **Sadaqah jariyah.** Free forever for users. Never any ads. Never sell data.
+
+### 3.2 Anti-Goals
+- ❌ No ads, ever
+- ❌ No selling of user data
+- ❌ No leaderboards or public rankings (riya concerns)
+- ❌ No public shaming or visibility of non-attendance
+- ❌ No verification/surveillance of physical attendance
+- ❌ No feature creep (no Quran, dhikr, qibla, duas, etc. in v1)
+
+### 3.3 A Note on Streaks
+Streaks **are** included in v1 as a positive motivator. The design team should land the tone carefully: streaks should feel like *encouragement to keep going*, not punishment for breaking them. Avoid loss-aversion phrasing ("Don't break your streak!"). Prefer affirmative phrasing ("5 days of Fajr in jama'ah, Alhamdulillah").
+
+---
+
+## 4. v1 Feature Scope
+
+### 4.1 Prayer Times & Adhan (Utility Layer)
+
+#### Calculation source
+- **Default:** Use the Adhan and Iqamah times of the user's **closest** masjid or their **primary** masjid (user's choice in settings).
+- **Override:** User may select any standard calculation method (ISNA, MWL, Umm al-Qura, Egyptian, etc.) instead of a masjid's published times.
+
+#### Adhan audio
+- Sensible default Adhan (recommend Makkah Adhan).
+- User can choose from a small library of reciter options.
+- No custom uploads in v1.
+
+#### Notifications (prayer-time related)
+- User picks **one or both** for each prayer:
+  - Notification at **Adhan time**
+  - Notification **10 minutes before Iqamah**
+- **Athan audio behavior:** configurable per user/per prayer (full Adhan vs. silent notification).
+- **DND override:** Adhan notifications are **time-sensitive / critical alerts** and override Do Not Disturb. Social notifications respect DND.
+
+### 4.2 RSVP / Intention Loop (Heart of the App)
+
+#### The prompt
+- User receives a notification **15–30 minutes before Adhan** asking about their intention for the upcoming prayer.
+
+#### Response options
+Three states:
+- **Going** — visible to friends
+- **Maybe** — private
+- **Can't make it** — private
+
+#### Behavior
+- Responding is **encouraged but not required**. Users can dismiss the prompt without responding.
+- After the prayer time passes, the RSVP is automatically marked as **completed** by default. No "did you make it?" follow-up.
+
+### 4.3 Masjid Selection
+
+#### Setup
+- During onboarding (and later in settings), users can:
+  - Set **one primary masjid**
+  - Add **occasional masjids** (e.g., near work, near family, frequent travel destinations)
+- The app **auto-suggests** masjids based on the user's current location.
+
+#### Travel behavior
+- The app **auto-detects significant location changes** (e.g., user flies to a new city) and re-suggests nearby masjids for ad-hoc selection without disrupting the primary masjid setting.
+
+#### Masjid data source
+- **All masjids worldwide** are auto-populated from public data sources (e.g., Google Places).
+- Masjid admins can also add a masjid that is missing from the public data.
+
+### 4.4 Community & Social Layer
+
+#### Visibility model (asymmetric, privacy-respecting)
+For a given prayer at a given masjid, a user sees:
+- **Names and profiles of friends** who have RSVP'd "Going"
+- **An aggregate count** of all other users going (e.g., "+18 others going to Maghrib")
+- **Nothing** about users who said "Maybe" or "Can't make it" — including friends
+
+#### Community membership
+- **Default:** Open. Anyone who selects a masjid is automatically part of that masjid's community for aggregate counts and group features.
+- **Optional:** Masjid admins may enable an "approve members" mode for verified-community masjids. (Admin-side flow can be lightweight in v1; designers should specify.)
+
+### 4.5 Friend Connections
+
+#### Discovery & adding
+All of the following methods are supported in v1:
+- **Contact sync** (find friends already on the app)
+- **Username/handle search**
+- **QR code** for in-person adds at the masjid (hero interaction — design should make this easy and beautiful)
+- **Shareable invite links** (via WhatsApp, SMS, etc.)
+
+### 4.6 Encouragement Mechanics
+
+All of the following are supported and granularly controllable by the user:
+- **Pre-set duas / reactions** — quick taps like "May Allah accept," "See you there," "Barak Allahu feek"
+- **Direct messages** between connected friends
+- **Group chat per masjid** — community feed for users attending a specific prayer
+- **Nudge button** — sends a gentle "hoping to see you" notification to a friend
+
+#### Smart proactive notifications
+The app surfaces social proof notifications proactively, but **scaled to the user's recent engagement**:
+- **Active users:** May receive notifications like "3 of your friends are going to Isha at Masjid Al-Noor"
+- **Less active / dormant users:** Receive fewer, gentler nudges to avoid overwhelm on return
+- All proactive notifications are configurable and opt-in.
+
+### 4.7 Streaks
+- Personal, private streak tracking for consistent attendance (e.g., 5 days of Fajr in jama'ah).
+- No public visibility, no leaderboards.
+- Positive framing only.
+
+### 4.8 Jummah Handling
+- Jummah **replaces Dhuhr** automatically on Fridays.
+- Single Jummah time per masjid in v1. (Multi-service masjids — i.e., masjids with two or three Jummah congregations — are deferred to v2.)
+
+### 4.9 Notification Controls
+Granular settings:
+- Master on/off
+- Per category (Adhan, Iqamah reminder, friend RSVPs, encouragements, nudges, streak reminders)
+- Per prayer (e.g., Fajr only, no Dhuhr)
+
+---
+
+## 5. Onboarding Flow
+
+### 5.1 Goal
+Get the user from app launch to a working Adhan + RSVP experience in **under 60 seconds**, with no forced social setup.
+
+### 5.2 Steps
+1. **Open the app** → brief value-prop intro screen
+2. **Grant location permission**
+3. **See nearby masjids** (auto-suggested from location)
+4. **Select primary masjid** (one tap)
+5. **Default name assigned** (user can edit, but not required)
+6. **Allow notifications** prompt
+7. **Enter the app** — fully functional Adhan + prayer time experience
+
+### 5.3 Deferred (post-onboarding)
+- Profile completion (photo, real name, bio)
+- Adding occasional masjids
+- Friend invites
+- Notification fine-tuning
+
+### 5.4 Empty State (No Friends Yet)
+- Show **aggregate masjid counts** immediately so the app feels alive (e.g., "23 going to Maghrib at Masjid Al-Noor")
+- Surface **invite CTAs** to share to existing groups (WhatsApp, contacts, SMS)
+- Encourage **QR code add** at the masjid
+
+---
+
+## 6. Masjid Admin Experience (v1)
+
+### 6.1 Capabilities
+Masjid admins can do **only** the following in v1:
+- Set and update **Adhan times** for each of the five prayers (and Jummah)
+- Set and update **Iqamah times** for each of the five prayers (and Jummah)
+
+That's it. No announcements, no chat moderation, no analytics, no member approval (except the optional toggle from §4.4), no push notifications to congregation.
+
+### 6.2 Claiming a Masjid
+- Any user can initiate a claim for a masjid.
+- **Multiple admins per masjid** are allowed.
+- Verification process is required (specifics TBD — recommended: email match to masjid's official domain, or a manual review by super admin).
+
+### 6.3 Unclaimed Masjids
+- Display **calculated prayer times** (no custom Iqamah).
+- Show a **"Claim this masjid"** CTA visible to users.
+- **Super admin** can update times manually for unclaimed masjids when needed.
+
+---
+
+## 7. User Stories (Selected, Non-Exhaustive)
+
+- *As a Muslim*, I want to be reminded of prayer 15-30 minutes before Adhan so I can plan to make it to the masjid in time.
+- *As a Muslim*, I want to see which of my friends are going to the next prayer at my masjid so I'm motivated to join them.
+- *As a Muslim*, I want to RSVP "Maybe" privately without anyone seeing, so I'm not pressured into commitments I'm unsure about.
+- *As a Muslim*, I want to send a quick "May Allah accept" to a friend who RSVP'd, so I can encourage them without typing.
+- *As a traveler*, I want the app to detect I'm in a new city and suggest nearby masjids automatically.
+- *As a new user*, I want to start using the app for prayer times in under a minute, without setting up a profile or finding friends first.
+- *As a masjid admin*, I want to update our Iqamah times in seconds when our schedule changes seasonally.
+- *As a user adding a friend at the masjid*, I want to scan their QR code in person rather than fumbling with usernames.
+
+---
+
+## 8. Edge Cases & Special Behaviors
+
+| Scenario | v1 Behavior |
+|---|---|
+| User flies to a new city | Auto-detect, re-suggest nearby masjids |
+| Friday | Jummah replaces Dhuhr automatically |
+| User RSVP's "Going" but prayer time passes | Mark as completed by default |
+| User declines location permission | Allow manual masjid selection by search |
+| User has no friends on the app | Show aggregate counts + invite CTAs |
+| Masjid has no admin | Show calculated times + "Claim this masjid" CTA |
+| User wants Adhan silent during work hours | Configurable per prayer |
+| Adhan during Do Not Disturb | Override DND (time-sensitive) |
+| Social notification during DND | Respect DND |
+
+---
+
+## 9. Out of Scope for v1 (Explicitly Deferred)
+
+The following are **intentionally not in v1**. The design team should not build for them, but should design in a way that doesn't preclude them.
+
+- ❌ Qibla direction
+- ❌ Quran reader, dhikr counter, duas library, Hijri calendar
+- ❌ Ramadan-specific features (Taraweeh, Suhoor/Iftar timing)
+- ❌ Goal-setting (e.g., "I want to attend Fajr 3x/week"). Streaks serve as implicit goals in v1.
+- ❌ Attendance verification (GPS check-in, QR scan at masjid, post-prayer "did you make it?")
+- ❌ Multi-service Jummah handling (multiple congregations at one masjid)
+- ❌ Multiple Iqamahs per prayer per masjid
+- ❌ Women's facilities indicators / gendered RSVPs
+- ❌ Apple Watch / Wear OS apps
+- ❌ Tablet / iPad optimization
+- ❌ Languages beyond English
+- ❌ Geographic markets beyond US
+- ❌ Specialized accessibility features beyond OS standards
+- ❌ Masjid admin features beyond Adhan/Iqamah times (announcements, analytics, chat moderation, push to congregation)
+- ❌ Subscriptions / paid features
+
+---
+
+## 10. Platform & Technical Constraints
+
+| Item | v1 Decision |
+|---|---|
+| **Tech stack** | React Native (single codebase for iOS + Android) |
+| **Platforms** | iOS + Android (phones only) |
+| **Languages** | English only |
+| **Markets** | United States |
+| **Accessibility** | Standard OS accessibility (screen reader, dynamic text, contrast). No custom accessibility features in v1. |
+| **Backend** | TBD by design/build team |
+| **Auth** | TBD — recommend phone, email, Apple, Google |
+
+---
+
+## 11. Visual & Brand Direction
+
+- **Aesthetic:** **Modern minimalist.** Clean typography, generous whitespace, thoughtful use of color. Closer to Calm or a great calendar app than to traditional Islamic-app aesthetics.
+- **Avoid:** Heavy ornate calligraphy, kitschy mosque illustrations, the green-and-gold cliché.
+- **Tone:** Warm, sincere, respectful. The product should feel like a supportive friend, not a productivity tool and not a religious authority.
+
+---
+
+## 12. Success Metrics
+
+### 12.1 North Star
+- **Total RSVPs marked "Going" per week** (trending up = product is working)
+
+### 12.2 Supporting Metrics
+- RSVP response rate (% of prompts that get a response)
+- Average streak length per active user
+- Friend connections per active user
+- Masjids claimed by admins (% of masjids in markets served)
+- Notification opt-in rate (especially Adhan and pre-Iqamah)
+- Day 7 / Day 30 retention
+- Invites sent and accepted
+
+### 12.3 Anti-Metrics (we are NOT optimizing for these)
+- Time spent in app
+- Daily session count
+- Engagement that doesn't lead to attendance
+
+---
+
+## 13. Open Questions for Design Team
+
+These are unresolved items the design team should address during the design phase:
+
+1. **Default name format:** What format should the auto-assigned default name take? (e.g., "Brother 1234," "Guest A47K," something else?)
+2. **Admin verification:** What is the lightest-touch verification flow that prevents abuse but doesn't block legitimate masjid admins?
+3. **Aggregate count threshold:** At what number does "X going" become motivating vs. discouraging? Should there be a minimum threshold before showing a count?
+4. **Group chat moderation:** With no admin moderation in v1, how do we handle abuse in masjid group chats? (Recommended: simple report/block for v1, defer richer tools.)
+5. **Notification timing personalization:** Should the 15-30 minute Adhan window be user-configurable, or fixed per prayer based on commute distance to primary masjid?
+6. **QR code design:** Static or rotating? Privacy considerations of in-person adds.
+7. **Onboarding without notification permission:** What is the experience if a user denies notifications? The app's core loop depends on them.
+8. **Gentle re-engagement copy:** What does the "depending on last app use" smart notification logic actually say? Sample copy needed.
+
+---
+
+## 14. Roadmap Glimpse (Post-v1)
+
+For context only — not v1 scope. Likely v2 candidates:
+- Goal-setting ("3x/week Fajr in jama'ah")
+- Ramadan features (Taraweeh, Suhoor/Iftar)
+- Arabic and Urdu language support
+- Women's facilities indicators
+- Multi-service Jummah handling
+- Masjid admin announcements
+- Apple Watch support
+- Geographic expansion beyond US
+- Optional subscriptions for premium features
+
+---
+
+## 15. Appendix: Glossary
+
+- **Adhan / Athan:** The Islamic call to prayer
+- **Iqamah:** The second call indicating prayer is about to begin in congregation
+- **Jama'ah:** Congregational prayer
+- **Jummah:** Friday congregational prayer (replaces Dhuhr)
+- **Masjid:** Mosque
+- **Niyyah:** Intention
+- **Sadaqah jariyah:** Ongoing charity that continues to benefit others over time
+- **Riya:** Performing acts of worship for the sake of being seen by others (to be avoided)
+
+---
+
+*End of PRD v1 Draft*
