@@ -84,7 +84,7 @@ export default function SettingsScreen() {
 
         {primaryMasjid && (
           <Pressable
-            onPress={() => router.push("/admin-portal")}
+            onPress={() => router.push({ pathname: "/admin-portal", params: { masjidId: primaryMasjid?.id ?? "" } })}
             style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
           >
             <Ionicons name="shield-outline" size={20} color={colors.primary} />

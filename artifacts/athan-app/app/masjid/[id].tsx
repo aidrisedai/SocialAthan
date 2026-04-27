@@ -100,7 +100,7 @@ export default function MasjidDetailScreen() {
 
         {!masjid.claimed && (
           <Pressable
-            onPress={() => router.push("/admin-portal")}
+            onPress={() => router.push({ pathname: "/admin-portal", params: { masjidId: masjid.id } })}
             style={[styles.claimBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
           >
             <Ionicons name="shield-outline" size={20} color={colors.primary} />

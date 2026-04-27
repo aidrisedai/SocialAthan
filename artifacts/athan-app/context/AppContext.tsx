@@ -120,6 +120,7 @@ interface AppContextValue {
   occasionalMasjids: Masjid[];
   addOccasionalMasjid: (masjidId: string) => void;
   removeOccasionalMasjid: (masjidId: string) => void;
+  claimMasjid: (masjidId: string) => void;
 }
 
 const DEFAULT_COORDS = { lat: 40.7128, lng: -74.006 };
@@ -532,6 +533,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [user?.occasionalMasjidIds, masjidList]
   );
 
+  const claimMasjid = useCallback((masjidId: string) => {
+    setMasjidList((prev) => {
+      const updated = prev.map((m) => (m.id === masjidId ? { ...m, claimed: true } : m));
+      AsyncStorage.setItem("masjidList", JSON.stringify(updated));
+      return updated;
+    });
+    setPrimaryMasjidState((prev) =>
+      prev?.id === masjidId ? { ...prev, claimed: true } : prev
+    );
+  }, []);
+
   const setPendingRSVP = useCallback((prayer: Prayer) => {
     setPendingRSVPState(prayer);
   }, []);
@@ -602,6 +614,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       occasionalMasjids,
       addOccasionalMasjid,
       removeOccasionalMasjid,
+      claimMasjid,
     }),
     [
       user,
@@ -633,6 +646,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       occasionalMasjids,
       addOccasionalMasjid,
       removeOccasionalMasjid,
+      claimMasjid,
     ]
   );
 

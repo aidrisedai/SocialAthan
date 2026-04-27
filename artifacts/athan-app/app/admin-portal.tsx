@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useApp, Prayer, MasjidTimeOverride } from "@/context/AppContext";
+import { useApp, Prayer, MasjidTimeOverride, buildPrayerTimes } from "@/context/AppContext";
 
 const PRAYERS: Array<{ prayer: Prayer; label: string }> = [
   { prayer: "fajr", label: "Fajr" },
@@ -28,10 +28,19 @@ type PrayerTimeMap = Record<Prayer, { adhan: string; iqamah: string }>;
 
 export default function AdminPortalScreen() {
   const colors = useColors();
-  const { primaryMasjid, prayerTimes, updateMasjidTimes, setPrimaryMasjid } = useApp();
-  const [claimed, setClaimed] = useState(primaryMasjid?.claimed ?? false);
+  const { masjidId: paramMasjidId } = useLocalSearchParams<{ masjidId?: string }>();
+  const { primaryMasjid, nearbyMasjids, prayerTimes, updateMasjidTimes, claimMasjid, coords, calcMethod } = useApp();
+
+  const targetMasjid = (paramMasjidId ? nearbyMasjids.find((m) => m.id === paramMasjidId) : null) ?? primaryMasjid;
+
+  const [claimed, setClaimed] = useState(targetMasjid?.claimed ?? false);
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [claimEmail, setClaimEmail] = useState("");
+
+  const targetPrayerTimes =
+    targetMasjid && targetMasjid.id !== primaryMasjid?.id
+      ? buildPrayerTimes(coords, calcMethod, targetMasjid, {})
+      : prayerTimes;
 
   const initialTimes = (): PrayerTimeMap => {
     const fallback: PrayerTimeMap = {
@@ -42,10 +51,10 @@ export default function AdminPortalScreen() {
       isha: { adhan: "", iqamah: "" },
       jummah: { adhan: "", iqamah: "" },
     };
-    for (const pt of prayerTimes) {
+    for (const pt of targetPrayerTimes) {
       fallback[pt.prayer] = { adhan: pt.adhan, iqamah: pt.iqamah };
     }
-    const overrides = primaryMasjid?.timeOverrides ?? {};
+    const overrides = targetMasjid?.timeOverrides ?? {};
     for (const [k, v] of Object.entries(overrides)) {
       if (v) fallback[k as Prayer] = v;
     }
@@ -61,7 +70,7 @@ export default function AdminPortalScreen() {
   }
 
   function handleSave() {
-    if (!primaryMasjid) return;
+    if (!targetMasjid) return;
 
     const invalid = PRAYERS.filter(({ prayer }) => {
       const t = editedTimes[prayer];
@@ -87,16 +96,16 @@ export default function AdminPortalScreen() {
         overrides[prayer] = { adhan, iqamah };
       }
     }
-    updateMasjidTimes(primaryMasjid.id, overrides);
+    updateMasjidTimes(targetMasjid.id, overrides);
     Alert.alert("Saved", "Prayer times updated for your congregation.");
   }
 
   function handleClaim() {
-    if (!claimEmail.trim() || !primaryMasjid) return;
+    if (!claimEmail.trim() || !targetMasjid) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setClaimed(true);
     setShowClaimForm(false);
-    setPrimaryMasjid({ ...primaryMasjid, claimed: true });
+    claimMasjid(targetMasjid.id);
     Alert.alert(
       "Claim Submitted",
       "Your claim has been submitted for review. We'll notify you once verified."
@@ -124,7 +133,7 @@ export default function AdminPortalScreen() {
         <View style={[styles.masjidBanner, { backgroundColor: colors.highlight }]}>
           <Ionicons name="location" size={20} color={colors.primary} />
           <Text style={[styles.masjidName, { color: colors.primary }]}>
-            {primaryMasjid?.name ?? "No Masjid Selected"}
+            {targetMasjid?.name ?? "No Masjid Selected"}
           </Text>
           <View
             style={[
