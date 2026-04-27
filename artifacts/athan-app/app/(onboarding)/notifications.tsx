@@ -22,6 +22,7 @@ const FEATURES: Feature[] = [
 ];
 
 const PROGRESS_DOTS = [0, 1, 2, 3, 4, 5];
+const CURRENT_STEP = 4;
 
 export default function NotificationsScreen() {
   const colors = useColors();
@@ -58,7 +59,10 @@ export default function NotificationsScreen() {
       <View style={styles.inner}>
         <View style={styles.progress}>
           {PROGRESS_DOTS.map((i) => (
-            <View key={i} style={[styles.dot, { backgroundColor: colors.foreground }]} />
+            <View
+              key={i}
+              style={[styles.dot, { backgroundColor: i <= CURRENT_STEP ? colors.foreground : colors.border }]}
+            />
           ))}
         </View>
 

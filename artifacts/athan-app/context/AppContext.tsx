@@ -613,7 +613,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const typed: Partial<Record<Prayer, MasjidTimeOverride>> = {};
         for (const p of prayers) {
           const v = overrides[p];
-          if (v) typed[p] = { adhan: v.adhan, iqamah: v.iqamah };
+          if (v && v.adhan && v.iqamah) typed[p] = { adhan: v.adhan, iqamah: v.iqamah };
         }
         setMasjidList((prev) => {
           const updated = prev.map((m) =>

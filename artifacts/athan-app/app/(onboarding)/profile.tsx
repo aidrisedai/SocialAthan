@@ -27,26 +27,19 @@ export default function ProfileScreen() {
   const colors = useColors();
   const { updateUser, onRegistered } = useApp();
   const [name, setName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const defaultUsername = useMemo(() => generateUsername(), []);
 
   async function handleContinue() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const displayName = name.trim() || "New User";
-    const code = inviteCode.trim();
-
-    if (!code) {
-      Alert.alert("Invite Code Required", "Please enter your invite code to continue.");
-      return;
-    }
 
     setIsRegistering(true);
     let lastError: Error | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       const username = attempt === 0 ? defaultUsername : generateUsername();
       try {
-        const res = await api.auth.register(displayName, username, code);
+        const res = await api.auth.register(displayName, username);
         await saveAuthCredentials(res.authToken, res.user.id);
         updateUser({
           id: res.user.id,
@@ -80,10 +73,10 @@ export default function ProfileScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.progress}>
-          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <View
               key={i}
-              style={[styles.dot, { backgroundColor: i <= 3 ? colors.foreground : colors.border }]}
+              style={[styles.dot, { backgroundColor: i <= 2 ? colors.foreground : colors.border }]}
             />
           ))}
         </View>
@@ -93,7 +86,7 @@ export default function ProfileScreen() {
             What should we call you?
           </Text>
           <Text style={[styles.body, { color: colors.mutedForeground }]}>
-            Enter your invite code and an optional display name to get started.
+            Enter an optional display name to get started.
           </Text>
         </View>
 
@@ -106,20 +99,6 @@ export default function ProfileScreen() {
             value={name}
             onChangeText={setName}
             autoCapitalize="words"
-            returnKeyType="next"
-            editable={!isRegistering}
-          />
-        </View>
-
-        <View style={[styles.inputContainer, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-          <Ionicons name="key-outline" size={20} color={colors.mutedForeground} />
-          <TextInput
-            style={[styles.input, { color: colors.foreground }]}
-            placeholder="Invite code (required)"
-            placeholderTextColor={colors.mutedForeground}
-            value={inviteCode}
-            onChangeText={setInviteCode}
-            autoCapitalize="none"
             returnKeyType="done"
             editable={!isRegistering}
             onSubmitEditing={handleContinue}

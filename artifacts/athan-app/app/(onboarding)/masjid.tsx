@@ -63,11 +63,12 @@ export default function MasjidSelectionScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
         <View style={styles.progress}>
-          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
-          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
-          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <View
+              key={i}
+              style={[styles.dot, { backgroundColor: i <= 1 ? colors.foreground : colors.border }]}
+            />
+          ))}
         </View>
         <Text style={[styles.headline, { color: colors.foreground }]}>
           Choose Your Masjid

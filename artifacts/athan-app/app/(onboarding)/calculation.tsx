@@ -34,10 +34,10 @@ export default function CalculationScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.progress}>
-          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          {[0, 1, 2, 3, 4, 5].map((i) => (
             <View
               key={i}
-              style={[styles.dot, { backgroundColor: i <= 4 ? colors.foreground : colors.border }]}
+              style={[styles.dot, { backgroundColor: i <= 3 ? colors.foreground : colors.border }]}
             />
           ))}
         </View>

@@ -83,10 +83,10 @@ export interface ApiMessage {
 
 export const api = {
   auth: {
-    register: (name: string, username: string, inviteCode: string) =>
+    register: (name: string, username: string) =>
       apiFetch<{ user: ApiUser; authToken: string }>("/auth/register", {
         method: "POST",
-        body: JSON.stringify({ name, username, inviteCode }),
+        body: JSON.stringify({ name, username }),
       }),
     me: () => apiFetch<{ user: ApiUser }>("/auth/me"),
   },

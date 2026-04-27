@@ -12,20 +12,10 @@ function genId() {
 }
 
 router.post("/auth/register", async (req, res) => {
-  const configuredCode = process.env.ATHAN_INVITE_CODE;
-  if (!configuredCode) {
-    res.status(503).json({ error: "Registration is not available at this time" });
-    return;
-  }
-  const { name, username, inviteCode } = req.body as {
+  const { name, username } = req.body as {
     name?: string;
     username?: string;
-    inviteCode?: string;
   };
-  if (!inviteCode || inviteCode.trim() !== configuredCode) {
-    res.status(403).json({ error: "Invalid invite code" });
-    return;
-  }
   if (!username || typeof username !== "string") {
     res.status(400).json({ error: "username is required" });
     return;

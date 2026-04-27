@@ -45,11 +45,12 @@ export default function LocationScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.progress}>
-          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
-          <View style={[styles.dot, { backgroundColor: colors.foreground }]} />
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <View
+              key={i}
+              style={[styles.dot, { backgroundColor: i <= 0 ? colors.foreground : colors.border }]}
+            />
+          ))}
         </View>
 
         <View style={[styles.iconCircle, { backgroundColor: denied ? "#3A1A1A" : colors.secondary }]}>
