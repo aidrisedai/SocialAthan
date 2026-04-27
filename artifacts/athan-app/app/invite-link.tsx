@@ -3,7 +3,7 @@ import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, SafeAreaView, Share, StyleSheet, Text, View } from "react-native";
 import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
@@ -25,7 +25,7 @@ export default function InviteLinkScreen() {
   const SHARE_BUTTONS: ShareButton[] = [
     { icon: "chatbubbles-outline", label: "WhatsApp", color: "#25D366" },
     { icon: "mail-outline", label: "SMS", color: "#007AFF" },
-    { icon: "share-outline", label: "Share", color: colors.primary },
+    { icon: "share-outline", label: "More", color: colors.primary },
   ];
 
   async function handleCopy() {
@@ -33,6 +33,21 @@ export default function InviteLinkScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  }
+
+  async function handleNativeShare() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== "web") {
+      try {
+        await Share.share({
+          message: `Join me on Athan — a community app that helps Muslims attend congregational prayer together. ${inviteLink}`,
+          url: inviteLink,
+          title: "Join me on Athan",
+        });
+      } catch (e) {
+        if (__DEV__) console.warn("Share error", e);
+      }
+    }
   }
 
   return (
@@ -82,7 +97,7 @@ export default function InviteLinkScreen() {
           {SHARE_BUTTONS.map((btn) => (
             <Pressable
               key={btn.label}
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              onPress={handleNativeShare}
               style={[
                 styles.shareBtn,
                 { backgroundColor: btn.color + "18", borderColor: btn.color + "44" },

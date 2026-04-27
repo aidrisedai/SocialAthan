@@ -6,7 +6,6 @@ import React, { useState } from "react";
 import { Platform, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
-import { useApp } from "@/context/AppContext";
 import { setupNotificationChannel } from "@/utils/notifications";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
@@ -22,11 +21,10 @@ const FEATURES: Feature[] = [
   { icon: "people-outline", text: "Friends going to the same prayer" },
 ];
 
-const PROGRESS_DOTS = [0, 1, 2, 3, 4];
+const PROGRESS_DOTS = [0, 1, 2, 3, 4, 5];
 
 export default function NotificationsScreen() {
   const colors = useColors();
-  const { setOnboardingComplete } = useApp();
   const [requesting, setRequesting] = useState(false);
 
   async function requestNotifications() {
@@ -45,13 +43,12 @@ export default function NotificationsScreen() {
       } catch {}
     }
     setRequesting(false);
-    finish();
+    advance();
   }
 
-  function finish() {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setOnboardingComplete(true);
-    router.replace("/(tabs)");
+  function advance() {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push("/(onboarding)/invite");
   }
 
   return (
@@ -103,7 +100,7 @@ export default function NotificationsScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={finish}>
+        <Pressable onPress={advance}>
           <Text style={[styles.skipText, { color: colors.mutedForeground }]}>Maybe later</Text>
         </Pressable>
       </View>

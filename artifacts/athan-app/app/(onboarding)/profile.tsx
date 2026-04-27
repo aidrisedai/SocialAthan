@@ -37,18 +37,19 @@ export default function ProfileScreen() {
       isAdmin: false,
       adminMasjidIds: [],
     });
-    router.push("/(onboarding)/notifications");
+    router.push("/(onboarding)/calculation");
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.progress}>
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.primary }]} />
-          <View style={[styles.dot, { backgroundColor: colors.border }]} />
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+            <View
+              key={i}
+              style={[styles.dot, { backgroundColor: i <= 3 ? colors.primary : colors.border }]}
+            />
+          ))}
         </View>
 
         <View style={styles.textBlock}>

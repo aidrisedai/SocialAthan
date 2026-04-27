@@ -7,7 +7,9 @@ export default function OnboardingLayout() {
       <Stack.Screen name="location" />
       <Stack.Screen name="masjid" />
       <Stack.Screen name="profile" />
+      <Stack.Screen name="calculation" />
       <Stack.Screen name="notifications" />
+      <Stack.Screen name="invite" />
     </Stack>
   );
 }
