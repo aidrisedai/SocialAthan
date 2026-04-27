@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
+import { startOnboardingTimer } from "@/utils/onboarding-timer";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -20,6 +21,8 @@ const FEATURES: Feature[] = [
 
 export default function WelcomeScreen() {
   const colors = useColors();
+
+  useEffect(() => { startOnboardingTimer(); }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>

@@ -11,7 +11,7 @@ A mobile app helping Muslims attend congregational prayer (jama'ah) by combining
 - **Framework**: Expo (React Native) with Expo Router v6
 - **Language**: TypeScript
 - **State**: React Context (AppContext) + AsyncStorage for persistence
-- **Packages**: expo-haptics, expo-blur, expo-location, expo-clipboard, expo-notifications, @tanstack/react-query
+- **Packages**: expo-haptics, expo-blur, expo-location, expo-clipboard, expo-notifications, expo-av, @tanstack/react-query
 
 ### Artifact
 - **Dir**: `artifacts/athan-app/`
@@ -71,3 +71,17 @@ artifacts/athan-app/
 - **Streaks are fully private**: No leaderboards, no public comparisons
 - **Onboarding gated**: `onboardingComplete` flag in AsyncStorage gates the app to onboarding on first launch
 - **RSVP modal**: Uses React Native Modal (not Expo Router formSheet) for reliable rendering
+- **Adhan audio**: Bundled WAV tone files in `assets/audio/`; production builds should replace with real adhan recordings
+
+## Audio Architecture
+- 4 WAV files (`adhan_makkah.wav`, `adhan_madinah.wav`, `adhan_mishary.wav`, `adhan_abdulkarim.wav`) bundled in `assets/audio/`
+- `app.json` `expo-notifications` plugin `sounds` array registers them with the native build
+- iOS notification `sound` field uses filename only (`adhan_makkah.wav`) — file must be in the app bundle
+- `expo-av` (`Audio.Sound.createAsync`) powers in-app preview on the Adhan Audio settings screen
+- Silent reciter uses default system sound for notifications
+
+## Notification Caveats
+- **iOS Critical Alerts**: Code sets `interruptionLevel: "critical"` for adhan notifications to override Do Not Disturb. This requires Apple's `com.apple.developer.usernotifications.critical-alerts` entitlement, which must be approved by Apple before submission. Without the entitlement, the notification will still be delivered but may be silenced in DND mode.
+- **Android notification sound**: Custom sounds are set at channel creation time. Once a channel is created on a device the sound cannot be changed — uninstalling/reinstalling is required to reset it.
+- **Friend nudges**: Currently a local in-app simulation (creates a local confirmation notification). True cross-user push delivery requires a backend push service (e.g. FCM/APNs via Expo Push Service) — not implemented in v1.
+- **Onboarding timing**: `utils/onboarding-timer.ts` logs completion time in dev mode (`__DEV__`) from `WelcomeScreen` mount to `InviteScreen` handleFinish. Use this to identify if the flow exceeds the 60s target on slow devices.

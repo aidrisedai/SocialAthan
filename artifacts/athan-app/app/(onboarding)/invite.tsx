@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
+import { logOnboardingDuration } from "@/utils/onboarding-timer";
 
 export default function InviteScreen() {
   const colors = useColors();
@@ -35,6 +36,7 @@ export default function InviteScreen() {
   }
 
   function handleFinish() {
+    logOnboardingDuration();
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setOnboardingComplete(true);
     router.replace("/(tabs)");
