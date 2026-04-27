@@ -188,11 +188,17 @@ function buildPrayerTimes(
   return computed.map((cp) => {
     const override = masjid?.timeOverrides?.[cp.prayer];
     const adhan = override?.adhan ?? cp.adhan;
-    const adhanDate = override ? new Date().toISOString() : cp.adhanDate;
+
+    let adhanDate = cp.adhanDate;
+    if (override?.adhan) {
+      const today = new Date().toDateString();
+      const parsed = new Date(`${today} ${override.adhan}`);
+      adhanDate = !isNaN(parsed.getTime()) ? parsed.toISOString() : cp.adhanDate;
+    }
 
     const iqamah = override?.iqamah ?? formatIqamah(adhan, cp.iqamahOffset);
 
-    const adhanTime = new Date(cp.adhanDate);
+    const adhanTime = new Date(adhanDate);
     const completed = !isNaN(adhanTime.getTime()) && adhanTime < new Date(now.getTime() - 15 * 60_000);
 
     return {

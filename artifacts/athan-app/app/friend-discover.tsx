@@ -26,6 +26,7 @@ interface ConnectOption {
 }
 
 const CONNECT_OPTIONS: ConnectOption[] = [
+  { icon: "people-outline", label: "Sync Contacts", sub: "Find friends already using the app", route: "/contact-sync" },
   { icon: "qr-code-outline", label: "QR Code", sub: "Scan someone's code at the masjid", route: "/qr-scan" },
   { icon: "link-outline", label: "Share Link", sub: "Invite via WhatsApp, SMS, or anywhere", route: "/invite-link" },
 ];

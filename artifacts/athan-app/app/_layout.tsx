@@ -70,6 +70,7 @@ function RootLayoutNav() {
       <Stack.Screen name="masjid-chat/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="friend-discover" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="friend-search" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen name="contact-sync" options={{ presentation: "modal", headerShown: false }} />
       <Stack.Screen name="friend/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="chat/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="admin-portal" options={{ presentation: "modal", headerShown: false }} />
