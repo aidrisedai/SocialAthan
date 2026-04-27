@@ -42,7 +42,9 @@ function NotificationHandler() {
         updateRSVP(prayer, "maybe" as RSVPStatus);
         router.navigate("/(tabs)");
       } else if (actionId === "dismiss") {
-        updateRSVP(prayer, "cant" as RSVPStatus);
+        if (data?.type === "rsvp_prompt") {
+          updateRSVP(prayer, "cant" as RSVPStatus);
+        }
       } else if (data?.type === "rsvp_prompt") {
         setPendingRSVP(prayer);
         router.navigate("/(tabs)");
