@@ -344,8 +344,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (Platform.OS === "web" || prayerTimes.length === 0) return;
-    setupNotificationChannel().catch(() => {});
-    scheduleAllPrayerNotifications(prayerTimes, notificationSettings).catch(() => {});
+    setupNotificationChannel().catch((e) => {
+      if (__DEV__) console.warn("[AppContext] Notification channel setup failed:", e);
+    });
+    scheduleAllPrayerNotifications(prayerTimes, notificationSettings).catch((e) => {
+      if (__DEV__) console.warn("[AppContext] Notification scheduling failed:", e);
+    });
   }, [prayerTimes, notificationSettings]);
 
   useEffect(() => {

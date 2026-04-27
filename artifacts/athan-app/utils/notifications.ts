@@ -106,7 +106,9 @@ export async function scheduleAllPrayerNotifications(
             date: adhanDate,
           },
         });
-      } catch (_) {}
+      } catch (e) {
+        if (__DEV__) console.warn("[notifications] adhan schedule failed:", e);
+      }
     }
 
     if (settings.iqamah && perPrayer.iqamah) {
@@ -131,7 +133,9 @@ export async function scheduleAllPrayerNotifications(
                 date: reminderDate,
               },
             });
-          } catch (_) {}
+          } catch (e) {
+            if (__DEV__) console.warn("[notifications] iqamah schedule failed:", e);
+          }
         }
       }
     }
@@ -156,7 +160,9 @@ export async function scheduleAllPrayerNotifications(
               date: promptDate,
             },
           });
-        } catch (_) {}
+        } catch (e) {
+          if (__DEV__) console.warn("[notifications] rsvp prompt schedule failed:", e);
+        }
       }
     }
   }
