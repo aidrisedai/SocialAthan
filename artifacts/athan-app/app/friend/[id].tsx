@@ -19,7 +19,7 @@ const PRAYER_ORDER: Prayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 export default function FriendProfileScreen() {
   const colors = useColors();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { friends, removeFriend, friendRSVPs, primaryMasjid, prayerTimes } = useApp();
+  const { friends, removeFriend, friendRSVPs, primaryMasjid, prayerTimes, sendMessage } = useApp();
 
   const friend = friends.find((f) => f.id === id);
 
@@ -42,7 +42,8 @@ export default function FriendProfileScreen() {
 
   function handleNudge() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert("Nudge sent", `A gentle reminder was sent to ${friendName}.`);
+    sendMessage(friendId, "🕌 Nudge — joining for prayer today?");
+    Alert.alert("Nudge sent", `A message was sent to ${friendName}.`);
   }
 
   function handleUnfriend() {

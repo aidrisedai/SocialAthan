@@ -65,7 +65,8 @@ export default function FriendsScreen() {
   }
 
   function handleNudge(friend: Friend) {
-    Alert.alert("Nudge sent!", `A gentle reminder was sent to ${friend.name}.`);
+    sendMessage(friend.id, "🕌 Nudge — joining for prayer today?");
+    Alert.alert("Nudge sent!", `A message was sent to ${friend.name}.`);
   }
 
   function handleMessage(friend: Friend) {
