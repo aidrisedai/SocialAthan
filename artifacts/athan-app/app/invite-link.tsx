@@ -7,6 +7,7 @@ import { Platform, Pressable, SafeAreaView, Share, StyleSheet, Text, View } from
 import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
+import { buildInviteShare } from "@/utils/inviteLink";
 
 type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -20,7 +21,7 @@ export default function InviteLinkScreen() {
   const colors = useColors();
   const { user } = useApp();
   const [copied, setCopied] = useState(false);
-  const inviteLink = `https://athan.app/invite/${user?.username ?? "user"}`;
+  const { url: inviteLink, message: inviteMessage, handle } = buildInviteShare(user?.username);
 
   const SHARE_BUTTONS: ShareButton[] = [
     { icon: "chatbubbles-outline", label: "WhatsApp", color: "#25D366" },
@@ -29,7 +30,7 @@ export default function InviteLinkScreen() {
   ];
 
   async function handleCopy() {
-    await Clipboard.setStringAsync(inviteLink);
+    await Clipboard.setStringAsync(inviteMessage);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -40,7 +41,7 @@ export default function InviteLinkScreen() {
     if (Platform.OS !== "web") {
       try {
         await Share.share({
-          message: `Join me on Athan — a community app that helps Muslims attend congregational prayer together. ${inviteLink}`,
+          message: inviteMessage,
           url: inviteLink,
           title: "Join me on Athan",
         });
@@ -66,17 +67,19 @@ export default function InviteLinkScreen() {
         </View>
 
         <View style={styles.textBlock}>
-          <Text style={[styles.headline, { color: colors.foreground }]}>Share Your Link</Text>
+          <Text style={[styles.headline, { color: colors.foreground }]}>Share the App</Text>
           <Text style={[styles.body, { color: colors.mutedForeground }]}>
-            Share this link with friends so they can join and connect with you on Athan.
+            {handle
+              ? `After they sign up, your friends can add you as ${handle}.`
+              : "Share the app with friends so they can join you in jama'ah."}
           </Text>
         </View>
 
         <View
           style={[styles.linkCard, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
-          <Text style={[styles.linkText, { color: colors.foreground }]} numberOfLines={1}>
-            {inviteLink}
+          <Text style={[styles.linkText, { color: colors.foreground }]} numberOfLines={2}>
+            {inviteMessage}
           </Text>
           <Pressable
             onPress={handleCopy}

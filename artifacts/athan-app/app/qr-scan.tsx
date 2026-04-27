@@ -126,8 +126,10 @@ export default function QRScanScreen() {
       setScanned(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      const match = data.match(/athan\.app\/invite\/([^/?#]+)/);
-      const username = match?.[1] ?? data.trim();
+      const trimmed = data.trim();
+      const urlMatch = trimmed.match(/\/invite\/([^/?#]+)/);
+      const handleMatch = trimmed.match(/^@?([a-z0-9_.-]+)$/i);
+      const username = urlMatch?.[1] ?? handleMatch?.[1] ?? trimmed;
 
       if (username === user?.username) {
         Alert.alert("That's you!", "You scanned your own QR code.", [
@@ -225,9 +227,6 @@ export default function QRScanScreen() {
             </View>
             <Text style={[styles.qrUsername, { color: colors.foreground }]}>
               @{user?.username ?? "username"}
-            </Text>
-            <Text style={[styles.qrLink, { color: colors.mutedForeground }]}>
-              athan.app/invite/{user?.username ?? "username"}
             </Text>
             <Text style={[styles.qrNote, { color: colors.mutedForeground }]}>
               Show this to friends to add you instantly

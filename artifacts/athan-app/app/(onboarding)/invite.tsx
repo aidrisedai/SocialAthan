@@ -14,18 +14,19 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
 import { logOnboardingDuration } from "@/utils/onboarding-timer";
+import { buildInviteShare } from "@/utils/inviteLink";
 
 export default function InviteScreen() {
   const colors = useColors();
   const { setOnboardingComplete, user } = useApp();
-  const inviteLink = `https://athan.app/invite/${user?.username ?? "user"}`;
+  const { url: inviteLink, message: inviteMessage } = buildInviteShare(user?.username);
 
   async function handleShare() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (Platform.OS !== "web") {
       try {
         await Share.share({
-          message: `Join me on Athan — a community app that helps Muslims attend congregational prayer together. ${inviteLink}`,
+          message: inviteMessage,
           url: inviteLink,
           title: "Join me on Athan",
         });

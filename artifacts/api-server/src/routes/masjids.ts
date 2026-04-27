@@ -271,31 +271,78 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function queryOverpass(query: string): Promise<OverpassElement[]> {
-  let lastErr: Error | null = null;
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 15000);
-      const resp = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: `data=${encodeURIComponent(query)}`,
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-      if (!resp.ok) {
-        lastErr = new Error(`Overpass ${new URL(endpoint).hostname} returned ${resp.status}`);
-        continue;
-      }
-      const json = (await resp.json()) as { elements?: OverpassElement[] };
-      return json.elements ?? [];
-    } catch (err) {
-      lastErr = err instanceof Error ? err : new Error(String(err));
-      continue;
+async function queryOneEndpoint(endpoint: string, query: string, timeoutMs: number): Promise<OverpassElement[]> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const resp = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `data=${encodeURIComponent(query)}`,
+      signal: ctrl.signal,
+    });
+    if (!resp.ok) {
+      throw new Error(`Overpass ${new URL(endpoint).hostname} returned ${resp.status}`);
     }
+    const json = (await resp.json()) as { elements?: OverpassElement[] };
+    return json.elements ?? [];
+  } finally {
+    clearTimeout(timer);
   }
-  throw lastErr ?? new Error("All Overpass endpoints failed");
+}
+
+// Race all mirrors in parallel — the first one to respond wins. Stragglers are aborted.
+async function queryOverpass(query: string): Promise<OverpassElement[]> {
+  const masterCtrl = new AbortController();
+  const attempts = OVERPASS_ENDPOINTS.map(async (endpoint) => {
+    try {
+      const result = await queryOneEndpoint(endpoint, query, 8000);
+      masterCtrl.abort();
+      return result;
+    } catch (err) {
+      throw err instanceof Error ? err : new Error(String(err));
+    }
+  });
+  try {
+    return await Promise.any(attempts);
+  } catch (err) {
+    if (err instanceof AggregateError) {
+      throw new Error(`All Overpass endpoints failed: ${err.errors.map((e) => (e as Error).message).join("; ")}`);
+    }
+    throw err;
+  }
+}
+
+// In-memory cache keyed by rounded lat/lng/radius. 10-minute TTL.
+interface CacheEntry {
+  expires: number;
+  payload: object[];
+}
+const NEARBY_CACHE = new Map<string, CacheEntry>();
+const NEARBY_CACHE_TTL_MS = 10 * 60_000;
+const NEARBY_CACHE_MAX = 200;
+
+function cacheKey(lat: number, lng: number, radius: number): string {
+  // ~250m grid (4dp ≈ 11m, 3dp ≈ 110m, 2dp ≈ 1.1km). Use 2dp + radius bucket so neighbors share a key.
+  return `${lat.toFixed(2)}|${lng.toFixed(2)}|${Math.round(radius / 1000)}`;
+}
+
+function cacheGet(key: string): object[] | null {
+  const hit = NEARBY_CACHE.get(key);
+  if (!hit) return null;
+  if (hit.expires < Date.now()) {
+    NEARBY_CACHE.delete(key);
+    return null;
+  }
+  return hit.payload;
+}
+
+function cacheSet(key: string, payload: object[]) {
+  if (NEARBY_CACHE.size >= NEARBY_CACHE_MAX) {
+    const firstKey = NEARBY_CACHE.keys().next().value;
+    if (firstKey) NEARBY_CACHE.delete(firstKey);
+  }
+  NEARBY_CACHE.set(key, { expires: Date.now() + NEARBY_CACHE_TTL_MS, payload });
 }
 
 router.get("/masjids/nearby", async (req, res) => {
@@ -309,9 +356,15 @@ router.get("/masjids/nearby", async (req, res) => {
   }
 
   const clampedRadius = Math.min(Math.max(radius, 1000), 50000);
+  const ck = cacheKey(lat, lng, clampedRadius);
+  const cached = cacheGet(ck);
+  if (cached) {
+    res.json({ masjids: cached, cached: true });
+    return;
+  }
 
   const query = [
-    `[out:json][timeout:25];`,
+    `[out:json][timeout:10];`,
     `(`,
     `  node["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
     `  way["amenity"="place_of_worship"]["religion"="muslim"](around:${clampedRadius},${lat},${lng});`,
@@ -370,6 +423,7 @@ router.get("/masjids/nearby", async (req, res) => {
     }
 
     results.sort((a: any, b: any) => (a.distance ?? 999) - (b.distance ?? 999));
+    cacheSet(ck, results);
     res.json({ masjids: results });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

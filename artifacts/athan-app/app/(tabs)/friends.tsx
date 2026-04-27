@@ -41,7 +41,7 @@ const DISCOVER_ITEMS: DiscoverItem[] = [
 export default function FriendsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { friends, friendRSVPs, primaryMasjid, prayerTimes, addFriend, sendMessage, notificationSettings } = useApp();
+  const { friends, friendRSVPs, communityCounts, primaryMasjid, prayerTimes, addFriend, sendMessage, notificationSettings } = useApp();
   const [activeTab, setActiveTab] = useState<Tab>("Going Now");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -217,8 +217,7 @@ export default function FriendsScreen() {
                     <Text style={[styles.aggregateSub, { color: colors.mutedForeground }]}>Attendance today</Text>
                     <View style={styles.aggregateRows}>
                       {prayerTimes.slice(0, 5).map((pt) => {
-                        const DEMO_COUNTS: Record<string, number> = { fajr: 38, dhuhr: 62, jummah: 210, asr: 45, maghrib: 91, isha: 74 };
-                        const count = DEMO_COUNTS[pt.prayer] ?? 30;
+                        const count = communityCounts[pt.prayer] ?? 0;
                         return (
                           <View key={pt.prayer} style={styles.aggregateRow}>
                             <Text style={[styles.aggregatePrayer, { color: colors.foreground }]}>{pt.label}</Text>

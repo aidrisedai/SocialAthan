@@ -219,11 +219,11 @@ export function buildPrayerTimes(
 
 function getDefaultStreaks(): StreakEntry[] {
   return [
-    { prayer: "fajr", label: "Fajr", count: 7, lastDate: new Date().toDateString() },
-    { prayer: "dhuhr", label: "Dhuhr", count: 3, lastDate: new Date().toDateString() },
-    { prayer: "asr", label: "Asr", count: 5, lastDate: new Date().toDateString() },
-    { prayer: "maghrib", label: "Maghrib", count: 14, lastDate: new Date().toDateString() },
-    { prayer: "isha", label: "Isha", count: 2, lastDate: null },
+    { prayer: "fajr", label: "Fajr", count: 0, lastDate: null },
+    { prayer: "dhuhr", label: "Dhuhr", count: 0, lastDate: null },
+    { prayer: "asr", label: "Asr", count: 0, lastDate: null },
+    { prayer: "maghrib", label: "Maghrib", count: 0, lastDate: null },
+    { prayer: "isha", label: "Isha", count: 0, lastDate: null },
   ];
 }
 
@@ -283,7 +283,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem("primaryMasjid"),
           AsyncStorage.getItem("prayerRsvps"),
           AsyncStorage.getItem("friends"),
-          AsyncStorage.getItem("streaks"),
+          AsyncStorage.getItem("streaks_v2"),
           AsyncStorage.getItem("notificationSettings"),
           AsyncStorage.getItem("calcMethod"),
           AsyncStorage.getItem("masjidList"),
@@ -757,7 +757,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const newCount = s.lastDate === yesterday.toDateString() ? s.count + 1 : 1;
         return { ...s, count: newCount, lastDate: today };
       });
-      AsyncStorage.setItem("streaks", JSON.stringify(updated));
+      AsyncStorage.setItem("streaks_v2", JSON.stringify(updated));
       return updated;
     });
   }, []);

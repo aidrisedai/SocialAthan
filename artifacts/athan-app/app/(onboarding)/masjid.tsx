@@ -37,12 +37,18 @@ export default function MasjidSelectionScreen() {
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
-      const res = await api.masjids.nearby(loc.coords.latitude, loc.coords.longitude);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 12000)
+      );
+      const res = await Promise.race([
+        api.masjids.nearby(loc.coords.latitude, loc.coords.longitude),
+        timeoutPromise,
+      ]);
       const results = (res.masjids ?? []) as Masjid[];
       if (results.length > 0) setLocalList(results);
       else setSearchError("No masjids found within 10 km. You can pick one later in settings.");
     } catch {
-      setSearchError("Search took too long. Please try again or skip for now.");
+      setSearchError("Search took too long. Tap Try again or skip for now.");
     } finally {
       setSearching(false);
     }
