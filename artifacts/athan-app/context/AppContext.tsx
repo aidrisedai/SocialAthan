@@ -75,6 +75,7 @@ export interface NotificationSettings {
   encouragements: boolean;
   nudges: boolean;
   streakReminders: boolean;
+  adhanReciter: string;
   perPrayer: Record<Prayer, boolean>;
 }
 
@@ -166,6 +167,7 @@ const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   encouragements: true,
   nudges: true,
   streakReminders: true,
+  adhanReciter: "makkah",
   perPrayer: {
     fajr: true,
     dhuhr: true,

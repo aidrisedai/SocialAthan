@@ -28,7 +28,7 @@ type PrayerTimeMap = Record<Prayer, { adhan: string; iqamah: string }>;
 
 export default function AdminPortalScreen() {
   const colors = useColors();
-  const { primaryMasjid, prayerTimes, updateMasjidTimes } = useApp();
+  const { primaryMasjid, prayerTimes, updateMasjidTimes, setPrimaryMasjid } = useApp();
   const [claimed, setClaimed] = useState(primaryMasjid?.claimed ?? false);
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [claimEmail, setClaimEmail] = useState("");
@@ -69,10 +69,11 @@ export default function AdminPortalScreen() {
   }
 
   function handleClaim() {
-    if (!claimEmail.trim()) return;
+    if (!claimEmail.trim() || !primaryMasjid) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setClaimed(true);
     setShowClaimForm(false);
+    setPrimaryMasjid({ ...primaryMasjid, claimed: true });
     Alert.alert(
       "Claim Submitted",
       "Your claim has been submitted for review. We'll notify you once verified."

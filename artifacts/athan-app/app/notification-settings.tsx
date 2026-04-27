@@ -168,6 +168,24 @@ export default function NotificationSettingsScreen() {
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.row}>
             <View style={styles.rowLeft}>
+              <Ionicons name="flame-outline" size={20} color={colors.primary} />
+              <View style={styles.rowText}>
+                <Text style={[styles.rowLabel, { color: colors.foreground }]}>Streak Reminders</Text>
+                <Text style={[styles.rowSub, { color: colors.mutedForeground }]}>
+                  Reminders to keep your jama'ah streak alive
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={s.masterEnabled && s.streakReminders}
+              onValueChange={(v) => updateNotificationSettings({ streakReminders: v })}
+              disabled={!s.masterEnabled}
+              trackColor={{ true: colors.primary }}
+            />
+          </View>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
               <Ionicons name="hand-left-outline" size={20} color={colors.primary} />
               <View style={styles.rowText}>
                 <Text style={[styles.rowLabel, { color: colors.foreground }]}>Nudges from Friends</Text>

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useApp } from "@/context/AppContext";
 
 const RECITERS = [
   { id: "makkah", name: "Makkah", desc: "Grand Mosque, Makkah (Default)" },
@@ -22,7 +23,13 @@ const RECITERS = [
 
 export default function AdhanAudioScreen() {
   const colors = useColors();
-  const [selected, setSelected] = useState("makkah");
+  const { notificationSettings, updateNotificationSettings } = useApp();
+  const selected = notificationSettings.adhanReciter ?? "makkah";
+
+  function handleSelect(id: string) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    updateNotificationSettings({ adhanReciter: id });
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -44,7 +51,7 @@ export default function AdhanAudioScreen() {
           return (
             <Pressable
               key={r.id}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelected(r.id); }}
+              onPress={() => handleSelect(r.id)}
               style={[
                 styles.reciterCard,
                 {
