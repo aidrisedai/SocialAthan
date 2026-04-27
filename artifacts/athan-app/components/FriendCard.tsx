@@ -2,10 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { Friend } from "@/context/AppContext";
 
-const DUAS = ["May Allah accept", "See you there", "Barak Allahu feek", "Alhamdulillah"];
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+const DUAS: string[] = ["May Allah accept", "See you there", "Barak Allahu feek", "Alhamdulillah"];
 
 interface Props {
   friend: Friend;
@@ -17,10 +20,6 @@ interface Props {
 
 export function FriendCard({ friend, prayerLabel, showDuas, onNudge, onMessage }: Props) {
   const colors = useColors();
-
-  function handleDua(dua: string) {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -47,7 +46,10 @@ export function FriendCard({ friend, prayerLabel, showDuas, onNudge, onMessage }
         <View style={styles.actions}>
           {onNudge && (
             <Pressable
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onNudge(friend); }}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onNudge(friend);
+              }}
               style={[styles.actionBtn, { backgroundColor: colors.secondary }]}
             >
               <Ionicons name="hand-left-outline" size={16} color={colors.primary} />
@@ -55,7 +57,10 @@ export function FriendCard({ friend, prayerLabel, showDuas, onNudge, onMessage }
           )}
           {onMessage && (
             <Pressable
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); onMessage(friend); }}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onMessage(friend);
+              }}
               style={[styles.actionBtn, { backgroundColor: colors.secondary }]}
             >
               <Ionicons name="chatbubble-outline" size={16} color={colors.primary} />
@@ -69,7 +74,7 @@ export function FriendCard({ friend, prayerLabel, showDuas, onNudge, onMessage }
           {DUAS.map((dua) => (
             <Pressable
               key={dua}
-              onPress={() => handleDua(dua)}
+              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
               style={[styles.duaChip, { backgroundColor: colors.secondary }]}
             >
               <Text style={[styles.duaText, { color: colors.foreground }]}>{dua}</Text>

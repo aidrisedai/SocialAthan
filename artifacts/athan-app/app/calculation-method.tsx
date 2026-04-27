@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -11,18 +11,50 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useApp } from "@/context/AppContext";
+import type { CalcMethod } from "@/utils/prayerTimes";
 
-const METHODS = [
-  { id: "isna", name: "ISNA", full: "Islamic Society of North America", region: "North America" },
-  { id: "mwl", name: "MWL", full: "Muslim World League", region: "Europe/Far East" },
-  { id: "umm", name: "Umm al-Qura", full: "Umm al-Qura University, Makkah", region: "Arabian Peninsula" },
-  { id: "egypt", name: "Egyptian", full: "Egyptian General Authority of Survey", region: "Africa, Syria, Lebanon" },
-  { id: "karachi", name: "Karachi", full: "University of Islamic Sciences, Karachi", region: "Pakistan, Bangladesh" },
+const METHODS: Array<{ id: CalcMethod; name: string; full: string; region: string }> = [
+  {
+    id: "isna",
+    name: "ISNA",
+    full: "Islamic Society of North America",
+    region: "North America",
+  },
+  {
+    id: "mwl",
+    name: "MWL",
+    full: "Muslim World League",
+    region: "Europe / Far East",
+  },
+  {
+    id: "umm",
+    name: "Umm al-Qura",
+    full: "Umm al-Qura University, Makkah",
+    region: "Arabian Peninsula",
+  },
+  {
+    id: "egypt",
+    name: "Egyptian",
+    full: "Egyptian General Authority of Survey",
+    region: "Africa, Syria, Lebanon",
+  },
+  {
+    id: "karachi",
+    name: "Karachi",
+    full: "University of Islamic Sciences, Karachi",
+    region: "Pakistan, Bangladesh",
+  },
 ];
 
 export default function CalculationMethodScreen() {
   const colors = useColors();
-  const [selected, setSelected] = useState("isna");
+  const { calcMethod, setCalcMethod } = useApp();
+
+  function handleSelect(method: CalcMethod) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCalcMethod(method);
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -36,15 +68,16 @@ export default function CalculationMethodScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={[styles.note, { color: colors.mutedForeground }]}>
-          When you've selected a primary masjid, its official times are used. This setting applies as fallback or override.
+          When you've selected a primary masjid with official times set, those are used directly.
+          This method applies as a fallback or personal override.
         </Text>
 
         {METHODS.map((method) => {
-          const isSelected = selected === method.id;
+          const isSelected = calcMethod === method.id;
           return (
             <Pressable
               key={method.id}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelected(method.id); }}
+              onPress={() => handleSelect(method.id)}
               style={[
                 styles.methodCard,
                 {
@@ -54,9 +87,15 @@ export default function CalculationMethodScreen() {
               ]}
             >
               <View style={styles.methodLeft}>
-                <Text style={[styles.methodName, { color: colors.foreground }]}>{method.name}</Text>
-                <Text style={[styles.methodFull, { color: colors.mutedForeground }]}>{method.full}</Text>
-                <Text style={[styles.methodRegion, { color: colors.mutedForeground }]}>{method.region}</Text>
+                <Text style={[styles.methodName, { color: colors.foreground }]}>
+                  {method.name}
+                </Text>
+                <Text style={[styles.methodFull, { color: colors.mutedForeground }]}>
+                  {method.full}
+                </Text>
+                <Text style={[styles.methodRegion, { color: colors.mutedForeground }]}>
+                  {method.region}
+                </Text>
               </View>
               {isSelected && (
                 <Ionicons name="checkmark-circle" size={22} color={colors.primary} />

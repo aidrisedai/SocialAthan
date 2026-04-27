@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import type { Href } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -13,12 +14,28 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp, Friend } from "@/context/AppContext";
 import { FriendCard } from "@/components/FriendCard";
 
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
 const TABS = ["Going Now", "All Friends", "Discover"] as const;
 type Tab = (typeof TABS)[number];
+
+interface DiscoverItem {
+  icon: IoniconName;
+  label: string;
+  sub: string;
+  route: Href;
+}
+
+const DISCOVER_ITEMS: DiscoverItem[] = [
+  { icon: "qr-code-outline", label: "Scan QR Code", sub: "Add someone in person at the masjid", route: "/qr-scan" },
+  { icon: "link-outline", label: "Share Invite Link", sub: "Send to WhatsApp, SMS, or anywhere", route: "/invite-link" },
+  { icon: "search-outline", label: "Search by Username", sub: "Find a friend by their @username", route: "/friend-search" },
+];
 
 export default function FriendsScreen() {
   const colors = useColors();
@@ -32,9 +49,7 @@ export default function FriendsScreen() {
 
   const nextPrayer = prayerTimes.find((p) => !p.completed);
 
-  const goingFriends = nextPrayer
-    ? (rsvps[nextPrayer.prayer] ?? [])
-    : [];
+  const goingFriends = nextPrayer ? (rsvps[nextPrayer.prayer] ?? []) : [];
 
   const filteredFriends = friends.filter(
     (f) =>
@@ -50,7 +65,7 @@ export default function FriendsScreen() {
   }
 
   function handleMessage(friend: Friend) {
-    router.push(`/chat/${friend.id}`);
+    router.push({ pathname: "/chat/[id]", params: { id: friend.id } });
   }
 
   function handleAddFriend() {
@@ -59,12 +74,7 @@ export default function FriendsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View
-        style={[
-          styles.header,
-          { paddingTop: topPaddingForWeb + 16 },
-        ]}
-      >
+      <View style={[styles.header, { paddingTop: topPaddingForWeb + 16 }]}>
         <View style={styles.headerRow}>
           <Text style={[styles.title, { color: colors.foreground }]}>Friends</Text>
           <Pressable
@@ -75,7 +85,12 @@ export default function FriendsScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[
+            styles.searchContainer,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
           <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
@@ -95,15 +110,24 @@ export default function FriendsScreen() {
           {TABS.map((tab) => (
             <Pressable
               key={tab}
-              onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setActiveTab(tab); }}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setActiveTab(tab);
+              }}
               style={[
                 styles.tabChip,
-                {
-                  backgroundColor: activeTab === tab ? colors.primary : colors.secondary,
-                },
+                { backgroundColor: activeTab === tab ? colors.primary : colors.secondary },
               ]}
             >
-              <Text style={[styles.tabText, { color: activeTab === tab ? colors.primaryForeground : colors.mutedForeground }]}>
+              <Text
+                style={[
+                  styles.tabText,
+                  {
+                    color:
+                      activeTab === tab ? colors.primaryForeground : colors.mutedForeground,
+                  },
+                ]}
+              >
                 {tab}
               </Text>
             </Pressable>
@@ -111,7 +135,10 @@ export default function FriendsScreen() {
         </ScrollView>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 + bottomPaddingForWeb }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 + bottomPaddingForWeb }}
+      >
         {activeTab === "Going Now" && (
           <>
             {nextPrayer && (
@@ -122,7 +149,9 @@ export default function FriendsScreen() {
             {goingFriends.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="people-outline" size={40} color={colors.mutedForeground} />
-                <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No friends going yet</Text>
+                <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+                  No friends going yet
+                </Text>
                 <Text style={[styles.emptyBody, { color: colors.mutedForeground }]}>
                   Invite friends to see who's heading to the masjid
                 </Text>
@@ -130,7 +159,9 @@ export default function FriendsScreen() {
                   onPress={() => router.push("/friend-discover")}
                   style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
                 >
-                  <Text style={[styles.inviteBtnText, { color: colors.primaryForeground }]}>Invite Friends</Text>
+                  <Text style={[styles.inviteBtnText, { color: colors.primaryForeground }]}>
+                    Invite Friends
+                  </Text>
                 </Pressable>
               </View>
             ) : (
@@ -164,7 +195,9 @@ export default function FriendsScreen() {
                   onPress={() => router.push("/friend-discover")}
                   style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
                 >
-                  <Text style={[styles.inviteBtnText, { color: colors.primaryForeground }]}>Add Friends</Text>
+                  <Text style={[styles.inviteBtnText, { color: colors.primaryForeground }]}>
+                    Add Friends
+                  </Text>
                 </Pressable>
               </View>
             ) : (
@@ -185,22 +218,25 @@ export default function FriendsScreen() {
             <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
               Find friends
             </Text>
-            {[
-              { icon: "qr-code-outline", label: "Scan QR Code", sub: "Add someone in person at the masjid", route: "/qr-scan" },
-              { icon: "link-outline", label: "Share Invite Link", sub: "Send to WhatsApp, SMS, or anywhere", route: "/invite-link" },
-              { icon: "search-outline", label: "Search by Username", sub: "Find a friend by their @username", route: "/friend-search" },
-            ].map((item) => (
+            {DISCOVER_ITEMS.map((item) => (
               <Pressable
-                key={item.icon}
-                onPress={() => router.push(item.route as any)}
-                style={[styles.discoverCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                key={item.label}
+                onPress={() => router.push(item.route)}
+                style={[
+                  styles.discoverCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
               >
                 <View style={[styles.discoverIconCircle, { backgroundColor: colors.highlight }]}>
-                  <Ionicons name={item.icon as any} size={22} color={colors.primary} />
+                  <Ionicons name={item.icon} size={22} color={colors.primary} />
                 </View>
                 <View style={styles.discoverText}>
-                  <Text style={[styles.discoverLabel, { color: colors.foreground }]}>{item.label}</Text>
-                  <Text style={[styles.discoverSub, { color: colors.mutedForeground }]}>{item.sub}</Text>
+                  <Text style={[styles.discoverLabel, { color: colors.foreground }]}>
+                    {item.label}
+                  </Text>
+                  <Text style={[styles.discoverSub, { color: colors.mutedForeground }]}>
+                    {item.sub}
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
               </Pressable>
@@ -250,9 +286,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Inter_400Regular",
   },
-  tabScroll: {
-    flexGrow: 0,
-  },
+  tabScroll: { flexGrow: 0 },
   tabChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,

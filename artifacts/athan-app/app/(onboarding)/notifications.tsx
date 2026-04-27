@@ -3,16 +3,26 @@ import * as Haptics from "expo-haptics";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import {
-  Platform,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
+import { setupNotificationChannel } from "@/utils/notifications";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+interface Feature {
+  icon: IoniconName;
+  text: string;
+}
+
+const FEATURES: Feature[] = [
+  { icon: "volume-high-outline", text: "Adhan audio at prayer time" },
+  { icon: "alarm-outline", text: "10-minute reminder before Iqamah" },
+  { icon: "people-outline", text: "Friends going to the same prayer" },
+];
+
+const PROGRESS_DOTS = [0, 1, 2, 3, 4];
 
 export default function NotificationsScreen() {
   const colors = useColors();
@@ -24,15 +34,17 @@ export default function NotificationsScreen() {
     if (Platform.OS !== "web") {
       try {
         await Notifications.requestPermissionsAsync({
-          ios: { allowAlert: true, allowBadge: true, allowSound: true, allowCriticalAlerts: true },
+          ios: {
+            allowAlert: true,
+            allowBadge: true,
+            allowSound: true,
+            allowCriticalAlerts: true,
+          },
         });
+        await setupNotificationChannel();
       } catch {}
     }
     setRequesting(false);
-    finish();
-  }
-
-  function skip() {
     finish();
   }
 
@@ -46,7 +58,7 @@ export default function NotificationsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.inner}>
         <View style={styles.progress}>
-          {[0, 1, 2, 3, 4].map((i) => (
+          {PROGRESS_DOTS.map((i) => (
             <View key={i} style={[styles.dot, { backgroundColor: colors.primary }]} />
           ))}
         </View>
@@ -60,18 +72,21 @@ export default function NotificationsScreen() {
             Never Miss a Prayer
           </Text>
           <Text style={[styles.body, { color: colors.mutedForeground }]}>
-            Get notified at Adhan time and before Iqamah. Adhan alerts override Do Not Disturb — so you hear the call even when your phone is silent.
+            Get notified at Adhan time and before Iqamah. Adhan alerts override Do Not Disturb
+            so you hear the call even when your phone is silent.
           </Text>
         </View>
 
         <View style={styles.features}>
-          {[
-            { icon: "volume-high-outline", text: "Adhan audio at prayer time" },
-            { icon: "alarm-outline", text: "10-minute reminder before Iqamah" },
-            { icon: "people-outline", text: "Friends going to the same prayer" },
-          ].map((f) => (
-            <View key={f.icon} style={[styles.featureRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Ionicons name={f.icon as any} size={20} color={colors.primary} />
+          {FEATURES.map((f) => (
+            <View
+              key={f.icon}
+              style={[
+                styles.featureRow,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+            >
+              <Ionicons name={f.icon} size={20} color={colors.primary} />
               <Text style={[styles.featureText, { color: colors.foreground }]}>{f.text}</Text>
             </View>
           ))}
@@ -88,10 +103,8 @@ export default function NotificationsScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={skip}>
-          <Text style={[styles.skipText, { color: colors.mutedForeground }]}>
-            Maybe later
-          </Text>
+        <Pressable onPress={finish}>
+          <Text style={[styles.skipText, { color: colors.mutedForeground }]}>Maybe later</Text>
         </Pressable>
       </View>
     </SafeAreaView>

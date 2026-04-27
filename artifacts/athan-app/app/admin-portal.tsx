@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useApp, Prayer } from "@/context/AppContext";
+import { useApp, Prayer, MasjidTimeOverride } from "@/context/AppContext";
 
 const PRAYERS: Array<{ prayer: Prayer; label: string }> = [
   { prayer: "fajr", label: "Fajr" },
@@ -24,24 +24,48 @@ const PRAYERS: Array<{ prayer: Prayer; label: string }> = [
   { prayer: "jummah", label: "Jumu'ah (Friday)" },
 ];
 
+type PrayerTimeMap = Record<Prayer, { adhan: string; iqamah: string }>;
+
 export default function AdminPortalScreen() {
   const colors = useColors();
-  const { primaryMasjid } = useApp();
+  const { primaryMasjid, prayerTimes, updateMasjidTimes } = useApp();
   const [claimed, setClaimed] = useState(primaryMasjid?.claimed ?? false);
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [claimEmail, setClaimEmail] = useState("");
-  const [prayerTimes, setPrayerTimes] = useState<Record<Prayer, { adhan: string; iqamah: string }>>({
-    fajr: { adhan: "5:22 AM", iqamah: "5:40 AM" },
-    dhuhr: { adhan: "12:48 PM", iqamah: "1:05 PM" },
-    asr: { adhan: "4:17 PM", iqamah: "4:30 PM" },
-    maghrib: { adhan: "7:41 PM", iqamah: "7:48 PM" },
-    isha: { adhan: "9:10 PM", iqamah: "9:25 PM" },
-    jummah: { adhan: "1:00 PM", iqamah: "1:30 PM" },
-  });
+
+  const initialTimes = (): PrayerTimeMap => {
+    const fallback: PrayerTimeMap = {
+      fajr: { adhan: "", iqamah: "" },
+      dhuhr: { adhan: "", iqamah: "" },
+      asr: { adhan: "", iqamah: "" },
+      maghrib: { adhan: "", iqamah: "" },
+      isha: { adhan: "", iqamah: "" },
+      jummah: { adhan: "", iqamah: "" },
+    };
+    for (const pt of prayerTimes) {
+      fallback[pt.prayer] = { adhan: pt.adhan, iqamah: pt.iqamah };
+    }
+    const overrides = primaryMasjid?.timeOverrides ?? {};
+    for (const [k, v] of Object.entries(overrides)) {
+      if (v) fallback[k as Prayer] = v;
+    }
+    return fallback;
+  };
+
+  const [editedTimes, setEditedTimes] = useState<PrayerTimeMap>(initialTimes());
 
   function handleSave() {
+    if (!primaryMasjid) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    Alert.alert("Saved", "Prayer times have been updated.");
+    const overrides: Partial<Record<Prayer, MasjidTimeOverride>> = {};
+    for (const { prayer } of PRAYERS) {
+      const t = editedTimes[prayer];
+      if (t.adhan.trim() || t.iqamah.trim()) {
+        overrides[prayer] = { adhan: t.adhan.trim(), iqamah: t.iqamah.trim() };
+      }
+    }
+    updateMasjidTimes(primaryMasjid.id, overrides);
+    Alert.alert("Saved", "Prayer times updated for your congregation.");
   }
 
   function handleClaim() {
@@ -53,6 +77,13 @@ export default function AdminPortalScreen() {
       "Claim Submitted",
       "Your claim has been submitted for review. We'll notify you once verified."
     );
+  }
+
+  function updateTime(prayer: Prayer, field: "adhan" | "iqamah", value: string) {
+    setEditedTimes((prev) => ({
+      ...prev,
+      [prayer]: { ...prev[prayer], [field]: value },
+    }));
   }
 
   return (
@@ -71,8 +102,22 @@ export default function AdminPortalScreen() {
           <Text style={[styles.masjidName, { color: colors.primary }]}>
             {primaryMasjid?.name ?? "No Masjid Selected"}
           </Text>
-          <View style={[styles.claimedBadge, { backgroundColor: claimed ? colors.primary : colors.secondary }]}>
-            <Text style={[styles.claimedText, { color: claimed ? colors.primaryForeground : colors.mutedForeground }]}>
+          <View
+            style={[
+              styles.claimedBadge,
+              { backgroundColor: claimed ? colors.primary : colors.secondary },
+            ]}
+          >
+            <Text
+              style={[
+                styles.claimedText,
+                {
+                  color: claimed
+                    ? colors.primaryForeground
+                    : colors.mutedForeground,
+                },
+              ]}
+            >
               {claimed ? "Verified Admin" : "Unclaimed"}
             </Text>
           </View>
@@ -83,7 +128,11 @@ export default function AdminPortalScreen() {
             onPress={() => setShowClaimForm(true)}
             style={[styles.claimBtn, { backgroundColor: colors.primary }]}
           >
-            <Ionicons name="shield-outline" size={20} color={colors.primaryForeground} />
+            <Ionicons
+              name="shield-outline"
+              size={20}
+              color={colors.primaryForeground}
+            />
             <Text style={[styles.claimBtnText, { color: colors.primaryForeground }]}>
               Claim this Masjid
             </Text>
@@ -91,17 +140,28 @@ export default function AdminPortalScreen() {
         )}
 
         {showClaimForm && (
-          <View style={[styles.claimForm, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.claimForm,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
             <Text style={[styles.claimFormTitle, { color: colors.foreground }]}>
               Claim Verification
             </Text>
             <Text style={[styles.claimFormBody, { color: colors.mutedForeground }]}>
-              Enter your masjid's official email address for verification. Our team will review your request.
+              Enter your masjid's official email address for verification. Our team will review
+              your request.
             </Text>
-            <View style={[styles.inputContainer, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+            <View
+              style={[
+                styles.inputContainer,
+                { backgroundColor: colors.secondary, borderColor: colors.border },
+              ]}
+            >
               <Ionicons name="mail-outline" size={18} color={colors.mutedForeground} />
               <TextInput
-                style={[styles.input, { color: colors.foreground }]}
+                style={[styles.inputField, { color: colors.foreground }]}
                 placeholder="masjid@example.org"
                 placeholderTextColor={colors.mutedForeground}
                 value={claimEmail}
@@ -121,7 +181,9 @@ export default function AdminPortalScreen() {
                 onPress={handleClaim}
                 style={[styles.submitBtn, { backgroundColor: colors.primary }]}
               >
-                <Text style={[styles.submitBtnText, { color: colors.primaryForeground }]}>Submit</Text>
+                <Text style={[styles.submitBtnText, { color: colors.primaryForeground }]}>
+                  Submit
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -133,39 +195,53 @@ export default function AdminPortalScreen() {
               Prayer Times
             </Text>
             <Text style={[styles.sectionNote, { color: colors.mutedForeground }]}>
-              Update Adhan and Iqamah times for your congregation
+              Set official Adhan and Iqamah times. These override calculated times for all
+              members of this masjid.
             </Text>
 
             {PRAYERS.map(({ prayer, label }) => (
               <View
                 key={prayer}
-                style={[styles.prayerSection, { backgroundColor: colors.card, borderColor: colors.border }]}
+                style={[
+                  styles.prayerSection,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
               >
                 <Text style={[styles.prayerLabel, { color: colors.foreground }]}>{label}</Text>
                 <View style={styles.timeInputs}>
                   <View style={styles.timeInput}>
-                    <Text style={[styles.timeInputLabel, { color: colors.mutedForeground }]}>Adhan</Text>
-                    <View style={[styles.inputBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <Text style={[styles.timeInputLabel, { color: colors.mutedForeground }]}>
+                      Adhan
+                    </Text>
+                    <View
+                      style={[
+                        styles.inputBox,
+                        { backgroundColor: colors.secondary, borderColor: colors.border },
+                      ]}
+                    >
                       <TextInput
                         style={[styles.inputText, { color: colors.foreground }]}
-                        value={prayerTimes[prayer].adhan}
-                        onChangeText={(v) =>
-                          setPrayerTimes((prev) => ({ ...prev, [prayer]: { ...prev[prayer], adhan: v } }))
-                        }
+                        value={editedTimes[prayer].adhan}
+                        onChangeText={(v) => updateTime(prayer, "adhan", v)}
                         placeholder="5:22 AM"
                         placeholderTextColor={colors.mutedForeground}
                       />
                     </View>
                   </View>
                   <View style={styles.timeInput}>
-                    <Text style={[styles.timeInputLabel, { color: colors.mutedForeground }]}>Iqamah</Text>
-                    <View style={[styles.inputBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+                    <Text style={[styles.timeInputLabel, { color: colors.mutedForeground }]}>
+                      Iqamah
+                    </Text>
+                    <View
+                      style={[
+                        styles.inputBox,
+                        { backgroundColor: colors.secondary, borderColor: colors.border },
+                      ]}
+                    >
                       <TextInput
                         style={[styles.inputText, { color: colors.foreground }]}
-                        value={prayerTimes[prayer].iqamah}
-                        onChangeText={(v) =>
-                          setPrayerTimes((prev) => ({ ...prev, [prayer]: { ...prev[prayer], iqamah: v } }))
-                        }
+                        value={editedTimes[prayer].iqamah}
+                        onChangeText={(v) => updateTime(prayer, "iqamah", v)}
                         placeholder="5:40 AM"
                         placeholderTextColor={colors.mutedForeground}
                       />
@@ -179,8 +255,14 @@ export default function AdminPortalScreen() {
               onPress={handleSave}
               style={[styles.saveBtn, { backgroundColor: colors.primary }]}
             >
-              <Ionicons name="checkmark-circle-outline" size={20} color={colors.primaryForeground} />
-              <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Save Times</Text>
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={20}
+                color={colors.primaryForeground}
+              />
+              <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>
+                Save Times
+              </Text>
             </Pressable>
           </>
         )}
@@ -268,7 +350,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
   },
-  input: {
+  inputField: {
     flex: 1,
     fontSize: 15,
     fontFamily: "Inter_400Regular",
@@ -313,6 +395,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     paddingHorizontal: 20,
     paddingBottom: 12,
+    lineHeight: 18,
   },
   prayerSection: {
     marginHorizontal: 16,

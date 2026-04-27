@@ -56,6 +56,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "dependencies": {
+    "adhan": "^4.4.3",
     "expo-clipboard": "^8.0.8",
     "expo-notifications": "^0.32.16"
   }

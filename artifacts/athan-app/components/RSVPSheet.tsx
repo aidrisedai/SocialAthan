@@ -1,16 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
 import React from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { Prayer, RSVPStatus, useApp } from "@/context/AppContext";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
 interface Props {
   prayer: Prayer;
@@ -24,7 +21,7 @@ interface Option {
   status: RSVPStatus;
   label: string;
   sublabel: string;
-  icon: string;
+  icon: IoniconName;
 }
 
 const OPTIONS: Option[] = [
@@ -64,7 +61,7 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
     onClose();
   }
 
-  const optionColors: Record<string, string> = {
+  const optionColors: Record<NonNullable<RSVPStatus>, string> = {
     going: colors.going,
     maybe: colors.maybe,
     cant: colors.cantMakeIt,
@@ -84,10 +81,10 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
       <View style={styles.options}>
         {OPTIONS.map((opt) => {
           const isSelected = currentRSVP === opt.status;
-          const optColor = optionColors[opt.status!];
+          const optColor = optionColors[opt.status as NonNullable<RSVPStatus>];
           return (
             <Pressable
-              key={opt.status}
+              key={String(opt.status)}
               onPress={() => handleSelect(opt.status)}
               style={[
                 styles.option,
@@ -99,7 +96,7 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
               ]}
             >
               <Ionicons
-                name={opt.icon as any}
+                name={opt.icon}
                 size={26}
                 color={isSelected ? "#FFF" : optColor}
               />
@@ -121,9 +118,7 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
                   {opt.sublabel}
                 </Text>
               </View>
-              {isSelected && (
-                <Ionicons name="checkmark" size={20} color="#FFF" />
-              )}
+              {isSelected && <Ionicons name="checkmark" size={20} color="#FFF" />}
             </Pressable>
           );
         })}
@@ -133,9 +128,7 @@ export function RSVPSheet({ prayer, prayerLabel, adhanTime, iqamahTime, onClose 
         onPress={onClose}
         style={[styles.dismissBtn, { paddingBottom: insets.bottom + 8 }]}
       >
-        <Text style={[styles.dismissText, { color: colors.mutedForeground }]}>
-          Dismiss
-        </Text>
+        <Text style={[styles.dismissText, { color: colors.mutedForeground }]}>Dismiss</Text>
       </Pressable>
     </View>
   );

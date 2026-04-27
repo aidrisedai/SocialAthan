@@ -1,14 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import {
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+interface Feature {
+  icon: IoniconName;
+  text: string;
+}
+
+const FEATURES: Feature[] = [
+  { icon: "time-outline", text: "Accurate Adhan & Iqamah times" },
+  { icon: "people-outline", text: "See friends going to each prayer" },
+  { icon: "flame-outline", text: "Track your jama'ah streak" },
+];
 
 export default function WelcomeScreen() {
   const colors = useColors();
@@ -32,14 +40,10 @@ export default function WelcomeScreen() {
         </View>
 
         <View style={styles.features}>
-          {[
-            { icon: "time-outline", text: "Accurate Adhan & Iqamah times" },
-            { icon: "people-outline", text: "See friends going to each prayer" },
-            { icon: "flame-outline", text: "Track your jama'ah streak" },
-          ].map((f) => (
+          {FEATURES.map((f) => (
             <View key={f.icon} style={styles.featureRow}>
               <View style={[styles.featureIcon, { backgroundColor: colors.highlight }]}>
-                <Ionicons name={f.icon as any} size={18} color={colors.primary} />
+                <Ionicons name={f.icon} size={18} color={colors.primary} />
               </View>
               <Text style={[styles.featureText, { color: colors.foreground }]}>{f.text}</Text>
             </View>
@@ -80,9 +84,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  textBlock: {
-    gap: 10,
-  },
+  textBlock: { gap: 10 },
   headline: {
     fontSize: 36,
     fontWeight: "700",
@@ -94,9 +96,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontFamily: "Inter_400Regular",
   },
-  features: {
-    gap: 14,
-  },
+  features: { gap: 14 },
   featureRow: {
     flexDirection: "row",
     alignItems: "center",

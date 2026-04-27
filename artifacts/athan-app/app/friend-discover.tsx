@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
+import type { Href } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -12,8 +12,23 @@ import {
   TextInput,
   View,
 } from "react-native";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp, Friend } from "@/context/AppContext";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+interface ConnectOption {
+  icon: IoniconName;
+  label: string;
+  sub: string;
+  route: Href;
+}
+
+const CONNECT_OPTIONS: ConnectOption[] = [
+  { icon: "qr-code-outline", label: "QR Code", sub: "Scan someone's code at the masjid", route: "/qr-scan" },
+  { icon: "link-outline", label: "Share Link", sub: "Invite via WhatsApp, SMS, or anywhere", route: "/invite-link" },
+];
 
 const SUGGESTED_USERS: Friend[] = [
   { id: "s1", name: "Khalid Rahman", username: "khalid_r", isConnected: false },
@@ -29,14 +44,15 @@ export default function FriendDiscoverScreen() {
 
   const existingIds = new Set(friends.map((f) => f.id));
 
-  const searched = query
-    ? SUGGESTED_USERS.filter(
-        (u) =>
-          !existingIds.has(u.id) &&
-          (u.name.toLowerCase().includes(query.toLowerCase()) ||
-            u.username.toLowerCase().includes(query.toLowerCase()))
-      )
-    : [];
+  const searched =
+    query.length > 0
+      ? SUGGESTED_USERS.filter(
+          (u) =>
+            !existingIds.has(u.id) &&
+            (u.name.toLowerCase().includes(query.toLowerCase()) ||
+              u.username.toLowerCase().includes(query.toLowerCase()))
+        )
+      : [];
 
   function handleAdd(user: Friend) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -54,7 +70,12 @@ export default function FriendDiscoverScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
         <TextInput
           style={[styles.searchInput, { color: colors.foreground }]}
@@ -91,28 +112,36 @@ export default function FriendDiscoverScreen() {
 
         {query.length === 0 && (
           <>
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>Ways to Connect</Text>
-            {[
-              { icon: "qr-code-outline", label: "QR Code", sub: "Scan someone's code at the masjid", route: "/qr-scan" },
-              { icon: "link-outline", label: "Share Link", sub: "Invite via WhatsApp, SMS, or anywhere", route: "/invite-link" },
-            ].map((item) => (
+            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+              Ways to Connect
+            </Text>
+            {CONNECT_OPTIONS.map((item) => (
               <Pressable
-                key={item.icon}
-                onPress={() => router.push(item.route as any)}
-                style={[styles.discoverCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                key={item.label}
+                onPress={() => router.push(item.route)}
+                style={[
+                  styles.discoverCard,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
               >
                 <View style={[styles.iconCircle, { backgroundColor: colors.highlight }]}>
-                  <Ionicons name={item.icon as any} size={22} color={colors.primary} />
+                  <Ionicons name={item.icon} size={22} color={colors.primary} />
                 </View>
                 <View style={styles.discoverText}>
-                  <Text style={[styles.discoverLabel, { color: colors.foreground }]}>{item.label}</Text>
-                  <Text style={[styles.discoverSub, { color: colors.mutedForeground }]}>{item.sub}</Text>
+                  <Text style={[styles.discoverLabel, { color: colors.foreground }]}>
+                    {item.label}
+                  </Text>
+                  <Text style={[styles.discoverSub, { color: colors.mutedForeground }]}>
+                    {item.sub}
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} />
               </Pressable>
             ))}
 
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>People You May Know</Text>
+            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>
+              People You May Know
+            </Text>
             {SUGGESTED_USERS.filter((u) => !existingIds.has(u.id)).map((user) => (
               <UserRow
                 key={user.id}
@@ -128,19 +157,33 @@ export default function FriendDiscoverScreen() {
   );
 }
 
-function UserRow({ user, added, onAdd }: { user: Friend; added: boolean; onAdd: (u: Friend) => void }) {
+function UserRow({
+  user,
+  added,
+  onAdd,
+}: {
+  user: Friend;
+  added: boolean;
+  onAdd: (u: Friend) => void;
+}) {
   const colors = useColors();
   return (
-    <View style={[styles.userRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View
+      style={[styles.userRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
       <View style={[styles.avatar, { backgroundColor: colors.secondary }]}>
-        <Text style={[styles.avatarText, { color: colors.primary }]}>{user.name.charAt(0)}</Text>
+        <Text style={[styles.avatarText, { color: colors.primary }]}>
+          {user.name.charAt(0)}
+        </Text>
       </View>
       <View style={styles.userInfo}>
         <Text style={[styles.userName, { color: colors.foreground }]}>{user.name}</Text>
-        <Text style={[styles.userHandle, { color: colors.mutedForeground }]}>@{user.username}</Text>
+        <Text style={[styles.userHandle, { color: colors.mutedForeground }]}>
+          @{user.username}
+        </Text>
       </View>
       <Pressable
-        onPress={() => !added && onAdd(user)}
+        onPress={() => { if (!added) onAdd(user); }}
         style={[
           styles.addBtn,
           { backgroundColor: added ? colors.secondary : colors.primary },

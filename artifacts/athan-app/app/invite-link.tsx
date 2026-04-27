@@ -3,21 +3,30 @@ import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import {
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+interface ShareButton {
+  icon: IoniconName;
+  label: string;
+  color: string;
+}
 
 export default function InviteLinkScreen() {
   const colors = useColors();
   const { user } = useApp();
   const [copied, setCopied] = useState(false);
   const inviteLink = `https://athan.app/invite/${user?.username ?? "user"}`;
+
+  const SHARE_BUTTONS: ShareButton[] = [
+    { icon: "chatbubbles-outline", label: "WhatsApp", color: "#25D366" },
+    { icon: "mail-outline", label: "SMS", color: "#007AFF" },
+    { icon: "share-outline", label: "Share", color: colors.primary },
+  ];
 
   async function handleCopy() {
     await Clipboard.setStringAsync(inviteLink);
@@ -48,13 +57,18 @@ export default function InviteLinkScreen() {
           </Text>
         </View>
 
-        <View style={[styles.linkCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View
+          style={[styles.linkCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
           <Text style={[styles.linkText, { color: colors.foreground }]} numberOfLines={1}>
             {inviteLink}
           </Text>
           <Pressable
             onPress={handleCopy}
-            style={[styles.copyBtn, { backgroundColor: copied ? colors.going : colors.primary }]}
+            style={[
+              styles.copyBtn,
+              { backgroundColor: copied ? colors.going : colors.primary },
+            ]}
           >
             <Ionicons
               name={copied ? "checkmark" : "copy-outline"}
@@ -65,17 +79,16 @@ export default function InviteLinkScreen() {
         </View>
 
         <View style={styles.shareButtons}>
-          {[
-            { icon: "chatbubbles-outline", label: "WhatsApp", color: "#25D366" },
-            { icon: "mail-outline", label: "SMS", color: "#007AFF" },
-            { icon: "share-outline", label: "Share", color: colors.primary },
-          ].map((btn) => (
+          {SHARE_BUTTONS.map((btn) => (
             <Pressable
               key={btn.label}
               onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-              style={[styles.shareBtn, { backgroundColor: btn.color + "18", borderColor: btn.color + "44" }]}
+              style={[
+                styles.shareBtn,
+                { backgroundColor: btn.color + "18", borderColor: btn.color + "44" },
+              ]}
             >
-              <Ionicons name={btn.icon as any} size={22} color={btn.color} />
+              <Ionicons name={btn.icon} size={22} color={btn.color} />
               <Text style={[styles.shareBtnText, { color: btn.color }]}>{btn.label}</Text>
             </Pressable>
           ))}

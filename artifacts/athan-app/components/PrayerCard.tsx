@@ -1,16 +1,12 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
 import React, { useRef } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import type { ComponentProps } from "react";
 import { useColors } from "@/hooks/useColors";
 import { Friend, Prayer, PrayerTime, RSVPStatus } from "@/context/AppContext";
+
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
 interface Props {
   item: PrayerTime;
@@ -26,7 +22,7 @@ const RSVP_LABELS: Record<NonNullable<RSVPStatus>, string> = {
   cant: "Can't make it",
 };
 
-const RSVP_ICONS: Record<NonNullable<RSVPStatus>, string> = {
+const RSVP_ICONS: Record<NonNullable<RSVPStatus>, IoniconName> = {
   going: "checkmark-circle",
   maybe: "help-circle",
   cant: "close-circle",
@@ -45,13 +41,14 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
     onRSVP(item.prayer);
   }
 
-  const rsvpColor = item.rsvp === "going"
-    ? colors.going
-    : item.rsvp === "maybe"
-    ? colors.maybe
-    : item.rsvp === "cant"
-    ? colors.cantMakeIt
-    : null;
+  const rsvpColor =
+    item.rsvp === "going"
+      ? colors.going
+      : item.rsvp === "maybe"
+      ? colors.maybe
+      : item.rsvp === "cant"
+      ? colors.cantMakeIt
+      : null;
 
   return (
     <Animated.View style={[{ transform: [{ scale }] }]}>
@@ -71,7 +68,11 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
             <Text
               style={[
                 styles.prayerLabel,
-                { color: isNext ? colors.primaryForeground : colors.mutedForeground },
+                {
+                  color: isNext
+                    ? colors.primaryForeground
+                    : colors.mutedForeground,
+                },
               ]}
             >
               {item.label}
@@ -79,7 +80,9 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
             <Text
               style={[
                 styles.adhanTime,
-                { color: isNext ? colors.primaryForeground : colors.foreground },
+                {
+                  color: isNext ? colors.primaryForeground : colors.foreground,
+                },
               ]}
             >
               {item.adhan}
@@ -87,7 +90,11 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
             <Text
               style={[
                 styles.iqamahTime,
-                { color: isNext ? "rgba(255,255,255,0.7)" : colors.mutedForeground },
+                {
+                  color: isNext
+                    ? "rgba(255,255,255,0.7)"
+                    : colors.mutedForeground,
+                },
               ]}
             >
               Iqamah {item.iqamah}
@@ -96,21 +103,59 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
 
           <View style={styles.rightSection}>
             {item.completed ? (
-              <View style={[styles.completedBadge, { backgroundColor: isNext ? "rgba(255,255,255,0.15)" : colors.secondary }]}>
-                <Ionicons name="checkmark" size={14} color={isNext ? colors.primaryForeground : colors.mutedForeground} />
+              <View
+                style={[
+                  styles.completedBadge,
+                  {
+                    backgroundColor: isNext
+                      ? "rgba(255,255,255,0.15)"
+                      : colors.secondary,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="checkmark"
+                  size={14}
+                  color={
+                    isNext ? colors.primaryForeground : colors.mutedForeground
+                  }
+                />
               </View>
             ) : item.rsvp ? (
-              <View style={[styles.rsvpBadge, { backgroundColor: rsvpColor ?? colors.secondary }]}>
+              <View
+                style={[
+                  styles.rsvpBadge,
+                  { backgroundColor: rsvpColor ?? colors.secondary },
+                ]}
+              >
                 <Ionicons
-                  name={RSVP_ICONS[item.rsvp] as any}
+                  name={RSVP_ICONS[item.rsvp]}
                   size={14}
                   color="#FFFFFF"
                 />
                 <Text style={styles.rsvpText}>{RSVP_LABELS[item.rsvp]}</Text>
               </View>
             ) : (
-              <View style={[styles.rsvpCTA, { borderColor: isNext ? "rgba(255,255,255,0.4)" : colors.border }]}>
-                <Text style={[styles.rsvpCTAText, { color: isNext ? "rgba(255,255,255,0.85)" : colors.mutedForeground }]}>
+              <View
+                style={[
+                  styles.rsvpCTA,
+                  {
+                    borderColor: isNext
+                      ? "rgba(255,255,255,0.4)"
+                      : colors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.rsvpCTAText,
+                    {
+                      color: isNext
+                        ? "rgba(255,255,255,0.85)"
+                        : colors.mutedForeground,
+                    },
+                  ]}
+                >
                   Set intention
                 </Text>
               </View>
@@ -119,7 +164,16 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
         </View>
 
         {(friendsGoing.length > 0 || communityCount > 0) && (
-          <View style={[styles.socialRow, { borderTopColor: isNext ? "rgba(255,255,255,0.15)" : colors.border }]}>
+          <View
+            style={[
+              styles.socialRow,
+              {
+                borderTopColor: isNext
+                  ? "rgba(255,255,255,0.15)"
+                  : colors.border,
+              },
+            ]}
+          >
             <View style={styles.avatarRow}>
               {friendsGoing.slice(0, 3).map((f, i) => (
                 <View
@@ -127,21 +181,45 @@ export function PrayerCard({ item, isNext, friendsGoing, communityCount, onRSVP 
                   style={[
                     styles.avatar,
                     {
-                      backgroundColor: isNext ? "rgba(255,255,255,0.3)" : colors.secondary,
+                      backgroundColor: isNext
+                        ? "rgba(255,255,255,0.3)"
+                        : colors.secondary,
                       marginLeft: i > 0 ? -8 : 0,
                       zIndex: 3 - i,
                     },
                   ]}
                 >
-                  <Text style={[styles.avatarText, { color: isNext ? colors.primaryForeground : colors.primary }]}>
+                  <Text
+                    style={[
+                      styles.avatarText,
+                      {
+                        color: isNext
+                          ? colors.primaryForeground
+                          : colors.primary,
+                      },
+                    ]}
+                  >
                     {f.name.charAt(0)}
                   </Text>
                 </View>
               ))}
             </View>
-            <Text style={[styles.socialText, { color: isNext ? "rgba(255,255,255,0.8)" : colors.mutedForeground }]}>
+            <Text
+              style={[
+                styles.socialText,
+                {
+                  color: isNext
+                    ? "rgba(255,255,255,0.8)"
+                    : colors.mutedForeground,
+                },
+              ]}
+            >
               {friendsGoing.length > 0
-                ? `${friendsGoing[0].name.split(" ")[0]}${friendsGoing.length > 1 ? ` +${friendsGoing.length - 1}` : ""}${communityCount > 0 ? ` · +${communityCount} others` : ""}`
+                ? `${friendsGoing[0].name.split(" ")[0]}${
+                    friendsGoing.length > 1
+                      ? ` +${friendsGoing.length - 1}`
+                      : ""
+                  }${communityCount > 0 ? ` · +${communityCount} others` : ""}`
                 : `${communityCount} going`}
             </Text>
           </View>
@@ -164,12 +242,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     padding: 18,
   },
-  leftSection: {
-    gap: 2,
-  },
-  rightSection: {
-    alignItems: "flex-end",
-  },
+  leftSection: { gap: 2 },
+  rightSection: { alignItems: "flex-end" },
   prayerLabel: {
     fontSize: 12,
     fontWeight: "600",

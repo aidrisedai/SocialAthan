@@ -15,7 +15,9 @@ import { useApp } from "@/context/AppContext";
 export default function QRScanScreen() {
   const colors = useColors();
   const { user } = useApp();
-  const [view, setView] = useState<"scan" | "show">("show");
+  type ViewMode = "scan" | "show";
+  const [view, setView] = useState<ViewMode>("show");
+  const VIEW_TABS: ViewMode[] = ["show", "scan"];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -28,10 +30,10 @@ export default function QRScanScreen() {
       </View>
 
       <View style={styles.tabs}>
-        {["show", "scan"].map((t) => (
+        {VIEW_TABS.map((t) => (
           <Pressable
             key={t}
-            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setView(t as any); }}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setView(t); }}
             style={[
               styles.tab,
               { backgroundColor: view === t ? colors.primary : colors.secondary },
