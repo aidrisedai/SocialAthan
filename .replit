@@ -43,6 +43,3 @@ externalPort = 3002
 channel = "stable-25_05"
 
 [userenv]
-
-[userenv.shared]
-ATHAN_INVITE_CODE = "athan2024"
