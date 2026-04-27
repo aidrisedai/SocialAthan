@@ -20,6 +20,14 @@
     "web": {
       "favicon": "./assets/images/icon.png"
     },
+    "notification": {
+      "sounds": [
+        "./assets/audio/adhan_makkah.wav",
+        "./assets/audio/adhan_madinah.wav",
+        "./assets/audio/adhan_mishary.wav",
+        "./assets/audio/adhan_abdulkarim.wav"
+      ]
+    },
     "plugins": [
       [
         "expo-router",
@@ -29,7 +37,17 @@
       ],
       "expo-font",
       "expo-web-browser",
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/audio/adhan_makkah.wav",
+            "./assets/audio/adhan_madinah.wav",
+            "./assets/audio/adhan_mishary.wav",
+            "./assets/audio/adhan_abdulkarim.wav"
+          ]
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

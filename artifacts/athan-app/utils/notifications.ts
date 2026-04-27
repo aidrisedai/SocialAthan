@@ -152,7 +152,7 @@ export async function scheduleAllPrayerNotifications(
           content: {
             title: `${prayer.label} · Adhan`,
             body: "It's time for prayer",
-            sound: Platform.OS === "ios" ? `adhan_${settings.adhanReciter}.mp3` : true,
+            sound: Platform.OS === "ios" && settings.adhanReciter !== "silent" ? `adhan_${settings.adhanReciter}.wav` : true,
             categoryIdentifier: ADHAN_CATEGORY,
             data: { prayer: prayer.prayer, type: "adhan", reciter: settings.adhanReciter },
             ...(Platform.OS === "ios"

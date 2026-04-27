@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Audio } from "expo-av";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Pressable,
   SafeAreaView,
@@ -14,21 +15,63 @@ import { useColors } from "@/hooks/useColors";
 import { useApp } from "@/context/AppContext";
 
 const RECITERS = [
-  { id: "makkah", name: "Makkah", desc: "Grand Mosque, Makkah (Default)" },
-  { id: "madinah", name: "Madinah", desc: "Prophet's Mosque, Madinah" },
-  { id: "mishary", name: "Mishary Rashid", desc: "Sheikh Mishary Alafasy" },
-  { id: "abdulkarim", name: "Abdul Karim", desc: "Sheikh Abdul Karim Al-Makki" },
-  { id: "silent", name: "Silent", desc: "No audio — notification only" },
+  { id: "makkah", name: "Makkah", desc: "Grand Mosque, Makkah (Default)", asset: require("../assets/audio/adhan_makkah.wav") },
+  { id: "madinah", name: "Madinah", desc: "Prophet's Mosque, Madinah", asset: require("../assets/audio/adhan_madinah.wav") },
+  { id: "mishary", name: "Mishary Rashid", desc: "Sheikh Mishary Alafasy", asset: require("../assets/audio/adhan_mishary.wav") },
+  { id: "abdulkarim", name: "Abdul Karim", desc: "Sheikh Abdul Karim Al-Makki", asset: require("../assets/audio/adhan_abdulkarim.wav") },
+  { id: "silent", name: "Silent", desc: "No audio — notification only", asset: null },
 ];
 
 export default function AdhanAudioScreen() {
   const colors = useColors();
   const { notificationSettings, updateNotificationSettings } = useApp();
   const selected = notificationSettings.adhanReciter ?? "makkah";
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
 
-  function handleSelect(id: string) {
+  useEffect(() => {
+    Audio.setAudioModeAsync({ playsInSilentModeIOS: true }).catch(() => {});
+    return () => {
+      soundRef.current?.unloadAsync().catch(() => {});
+    };
+  }, []);
+
+  async function handlePreview(reciter: typeof RECITERS[0]) {
+    if (!reciter.asset) return;
+
+    if (playingId === reciter.id) {
+      await soundRef.current?.stopAsync().catch(() => {});
+      await soundRef.current?.unloadAsync().catch(() => {});
+      soundRef.current = null;
+      setPlayingId(null);
+      return;
+    }
+
+    await soundRef.current?.stopAsync().catch(() => {});
+    await soundRef.current?.unloadAsync().catch(() => {});
+    soundRef.current = null;
+
+    try {
+      const { sound } = await Audio.Sound.createAsync(reciter.asset, { shouldPlay: true });
+      soundRef.current = sound;
+      setPlayingId(reciter.id);
+      sound.setOnPlaybackStatusUpdate((status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          setPlayingId(null);
+          sound.unloadAsync().catch(() => {});
+          soundRef.current = null;
+        }
+      });
+    } catch (e) {
+      if (__DEV__) console.warn("[adhan-audio] playback failed:", e);
+      setPlayingId(null);
+    }
+  }
+
+  function handleSelect(reciter: typeof RECITERS[0]) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    updateNotificationSettings({ adhanReciter: id });
+    updateNotificationSettings({ adhanReciter: reciter.id });
+    handlePreview(reciter);
   }
 
   return (
@@ -43,15 +86,16 @@ export default function AdhanAudioScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={[styles.note, { color: colors.mutedForeground }]}>
-          Adhan notifications override Do Not Disturb. Choose your preferred recitation.
+          Adhan notifications override Do Not Disturb. Tap a reciter to preview, then tap again to stop.
         </Text>
 
         {RECITERS.map((r) => {
           const isSelected = selected === r.id;
+          const isPlaying = playingId === r.id;
           return (
             <Pressable
               key={r.id}
-              onPress={() => handleSelect(r.id)}
+              onPress={() => handleSelect(r)}
               style={[
                 styles.reciterCard,
                 {
@@ -60,13 +104,17 @@ export default function AdhanAudioScreen() {
                 },
               ]}
             >
-              <View style={[styles.playBtn, { backgroundColor: isSelected ? colors.primary : colors.secondary }]}>
+              <Pressable
+                onPress={() => handlePreview(r)}
+                style={[styles.playBtn, { backgroundColor: isPlaying ? colors.primary : (isSelected ? colors.primary : colors.secondary) }]}
+                hitSlop={8}
+              >
                 <Ionicons
-                  name={isSelected ? "volume-high" : "play"}
+                  name={isPlaying ? "stop" : (r.asset ? "play" : "volume-mute")}
                   size={18}
-                  color={isSelected ? colors.primaryForeground : colors.mutedForeground}
+                  color={isPlaying || isSelected ? colors.primaryForeground : colors.mutedForeground}
                 />
-              </View>
+              </Pressable>
               <View style={styles.reciterInfo}>
                 <Text style={[styles.reciterName, { color: colors.foreground }]}>{r.name}</Text>
                 <Text style={[styles.reciterDesc, { color: colors.mutedForeground }]}>{r.desc}</Text>
